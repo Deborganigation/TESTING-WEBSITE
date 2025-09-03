@@ -3,186 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vendor Portal</title>
+    <title>Pro-Vendor Portal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .container { width: 100%; max-width: 1200px; background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; }
-        .hidden { display: none; }
-        /* Login Form Styles */
-        #login-container { padding: 40px; text-align: center; }
-        #login-container h1 { margin-bottom: 24px; color: #1c1e21; }
-        #login-container input { width: 100%; max-width: 320px; padding: 14px; margin-bottom: 12px; border: 1px solid #dddfe2; border-radius: 6px; font-size: 16px; }
-        #login-container button { width: 100%; max-width: 336px; padding: 14px; background-color: #1877f2; color: white; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        #login-container button:hover { background-color: #166fe5; }
-        /* Dashboard Styles */
-        .dashboard { padding: 24px; }
-        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #dddfe2;}
-        .header h1 { margin: 0; }
-        .header button { background-color: #f02849; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px 15px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #4CAF50; color: white; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .loader { text-align: center; padding: 40px; font-size: 1.2em; }
+        body { background-color: #f8f9fa; }
+        .login-container { max-width: 400px; margin-top: 10vh; }
+        .dashboard { display: none; }
+        .card-header, .modal-header { background-color: #0d6efd; color: white; }
+        .table-hover tbody tr:hover { cursor: pointer; }
+        .nav-tabs .nav-link.active { background-color: #0d6efd; color: white; }
     </style>
 </head>
 <body>
 
     <div class="container">
 
-        <div id="login-container">
-            <h1>Welcome to the Portal</h1>
-            <p>Please log in to continue</p>
+        <div id="login-container" class="card p-4 shadow-sm login-container mx-auto">
+            <h2 class="text-center mb-4">Pro-Vendor Portal Login</h2>
             <form id="login-form">
-                <input type="email" id="email" placeholder="Email" required>
-                <br>
-                <input type="password" id="password" placeholder="Password" required>
-                <br>
-                <button type="submit">Log In</button>
+                <div class="mb-3"><input type="email" id="email" class="form-control" placeholder="Email" required></div>
+                <div class="mb-3"><input type="password" id="password" class="form-control" placeholder="Password" required></div>
+                <button type="submit" class="btn btn-primary w-100">Log In</button>
             </form>
-            <p id="login-error" style="color: red;"></p>
+            <p id="login-error" class="text-danger mt-3 text-center"></p>
         </div>
 
-        <div id="admin-dashboard" class="dashboard hidden">
-            <div class="header">
-                <h1>Admin Dashboard</h1>
-                <button onclick="handleLogout()">Logout</button>
+        <div id="admin-dashboard" class="dashboard mt-4">
+            <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded shadow-sm">
+                <h1 class="h3 mb-0">Admin Dashboard</h1>
+                <button onclick="handleLogout()" class="btn btn-danger">Logout</button>
             </div>
-            <h2>All Requirements</h2>
-            <div id="admin-loader" class="loader">Loading... 🔄</div>
-            <table id="admin-req-table" class="hidden">
-                <thead>
-                    <tr>
-                        <th>Requirement ID</th>
-                        <th>Product Name</th>
-                        <th>Quantity</th>
-                        <th>Status</th>
-                        <th>Deadline</th>
-                    </tr>
-                </thead>
+            
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Bulk Upload Requirements</h5>
+                </div>
+                <div class="card-body">
+                    <p>Upload a .CSV or .XLSX file with columns: <strong>ProductName, Description, Quantity, DeliveryLocation, Deadline</strong>.</p>
+                    <input type="file" id="bulkUploadInput" class="form-control" accept=".csv, .xlsx">
+                    <div id="upload-status" class="mt-2"></div>
+                </div>
+            </div>
+
+            <h4>All Requirements</h4>
+            <div id="admin-loader" class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>
+            <table class="table table-hover table-bordered bg-white shadow-sm" id="admin-req-table" style="display:none;">
+                <thead class="table-dark"><tr><th>ID</th><th>Product</th><th>Quantity</th><th>Status</th><th>Deadline</th></tr></thead>
                 <tbody id="admin-req-tbody"></tbody>
             </table>
         </div>
 
-        <div id="vendor-portal" class="dashboard hidden">
-            <div class="header">
-                <h1>Vendor Portal</h1>
-                <button onclick="handleLogout()">Logout</button>
+        <div id="vendor-portal" class="dashboard mt-4">
+             <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded shadow-sm">
+                <h1 class="h3 mb-0" id="vendor-welcome">Vendor Portal</h1>
+                <button onclick="handleLogout()" class="btn btn-danger">Logout</button>
             </div>
-            <h2>My Assigned Requirements</h2>
-            <p>Coming soon...</p>
+            <h4>My Assigned Requirements</h4>
+             <div id="vendor-loader" class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>
+            <table class="table table-hover table-bordered bg-white shadow-sm" id="vendor-req-table" style="display:none;">
+                <thead class="table-dark"><tr><th>ID</th><th>Product</th><th>Quantity</th><th>Deadline</th><th>My Bid Status</th></tr></thead>
+                <tbody id="vendor-req-tbody"></tbody>
+            </table>
         </div>
 
     </div>
 
+    <div class="modal fade" id="bidModal" tabindex="-1">...</div> <div class="modal fade" id="adminActionModal" tabindex="-1">
+      <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="adminActionModalTitle">Requirement Details</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <ul class="nav nav-tabs" id="myTab" role="tablist">
+              <li class="nav-item" role="presentation"><button class="nav-link active" id="view-bids-tab" data-bs-toggle="tab" data-bs-target="#view-bids-pane" type="button">View Bids</button></li>
+              <li class="nav-item" role="presentation"><button class="nav-link" id="assign-vendors-tab" data-bs-toggle="tab" data-bs-target="#assign-vendors-pane" type="button">Assign Vendors</button></li>
+            </ul>
+            <div class="tab-content" id="myTabContent">
+              <div class="tab-pane fade show active p-3" id="view-bids-pane">
+                <div id="bids-loader" class="text-center p-4"><div class="spinner-border text-success" role="status"></div></div>
+                <table class="table table-striped" id="bids-table" style="display:none;">
+                  <thead><tr><th>Bid ID</th><th>Vendor ID</th><th>Amount</th><th>Comments</th><th>Status</th></tr></thead>
+                  <tbody id="bids-tbody"></tbody>
+                </table>
+              </div>
+              <div class="tab-pane fade p-3" id="assign-vendors-pane">
+                  <div id="vendors-loader" class="text-center p-4"><div class="spinner-border text-info" role="status"></div></div>
+                  <div id="vendor-list"></div>
+                  <button class="btn btn-primary mt-3" id="save-assignments-btn">Save Assignments</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycby9gvB3PRYH35BG6k1pZkcxX2k-WbG4Fflz0ZVFTVxGyXrsz0EMi48tOByUMnKQvr3U/exec';
+        // API URL and Global Variables
+        const API_URL = 'YOUR_APPS_SCRIPT_URL'; // Replace with your actual URL
+        let adminActionModal;
+        
+        // ... (Paste all JavaScript code from the previous step here) ...
+        // We will now add NEW and MODIFIED functions below
 
-        const loginContainer = document.getElementById('login-container');
-        const adminDashboard = document.getElementById('admin-dashboard');
-        const vendorPortal = document.getElementById('vendor-portal');
-        const loginForm = document.getElementById('login-form');
-        const loginError = document.getElementById('login-error');
+        // ===============================================
+        //  NEW & MODIFIED JAVASCRIPT FUNCTIONS START HERE
+        // ===============================================
 
-        // ### 1. LOGIN LOGIC ###
-        loginForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            loginError.textContent = 'Logging in...';
+        // ### ADMIN: BULK UPLOAD ###
+        document.getElementById('bulkUploadInput').addEventListener('change', handleFileUpload);
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const statusDiv = document.getElementById('upload-status');
+            statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"></div> Reading file...`;
 
-            try {
-                const response = await fetch(API_URL + '?sheet=Users');
-                const result = await response.json();
-
-                if (!result.success) {
-                    throw new Error('Could not fetch user data.');
-                }
-
-                const users = result.data;
-                const foundUser = users.find(user => user.Email === email && user.Password === password);
-
-                if (foundUser) {
-                    // Login successful
-                    sessionStorage.setItem('loggedInUser', JSON.stringify(foundUser));
-                    showDashboard();
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const data = e.target.result;
+                let requirements = [];
+                if (file.name.endsWith('.csv')) {
+                    requirements = Papa.parse(data, { header: true, skipEmptyLines: true }).data;
                 } else {
-                    // Login failed
-                    loginError.textContent = 'Invalid email or password.';
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const sheetName = workbook.SheetNames[0];
+                    requirements = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
                 }
-            } catch (error) {
-                loginError.textContent = 'An error occurred. Please try again.';
-                console.error('Login Error:', error);
+                
+                if (requirements.length > 0) {
+                    statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"></div> Uploading ${requirements.length} records...`;
+                    const result = await postData({ action: 'bulkUploadRequirements', data: requirements });
+                    if (result.success) {
+                        statusDiv.innerHTML = `<span class="text-success">${result.message}</span>`;
+                        loadAdminData(); // Refresh the list
+                    } else {
+                        statusDiv.innerHTML = `<span class="text-danger">Error: ${result.error}</span>`;
+                    }
+                } else {
+                    statusDiv.textContent = 'No data found in file.';
+                }
+            };
+            if (file.name.endsWith('.csv')) reader.readAsText(file);
+            else reader.readAsBinaryString(file);
+        }
+
+        // ### MODIFIED: ADMIN's open modal function ###
+        async function openAdminActionModal(reqId) {
+            adminActionModal.show();
+            document.getElementById('adminActionModalTitle').textContent = `Details for ${reqId}`;
+            // Store reqId in the modal for other functions to use
+            document.getElementById('adminActionModal').dataset.reqId = reqId;
+
+            // Reset tabs
+            document.getElementById('view-bids-tab').click();
+            loadBidsForAdmin(reqId);
+            loadVendorsForAssignment(reqId);
+        }
+
+        // ### ADMIN: LOAD BIDS (with Status Update) ###
+        async function loadBidsForAdmin(reqId) {
+            // ... (similar to openViewBidsModal logic from before)
+            // BUT with a status dropdown
+            bidsTbody.innerHTML = '';
+            relevantBids.forEach(bid => {
+                const statusOptions = ['Submitted', 'Viewed', 'Accepted', 'Rejected']
+                    .map(s => `<option value="${s}" ${s === bid.BidStatus ? 'selected' : ''}>${s}</option>`).join('');
+                
+                bidsTbody.innerHTML += `<tr>
+                    <td>${bid.BidID}</td><td>${bid.VendorID}</td><td>$${bid.BidAmount}</td><td>${bid.Comments}</td>
+                    <td><select class="form-select" onchange="updateBidStatus('${bid.BidID}', this.value)">${statusOptions}</select></td>
+                </tr>`;
+            });
+        }
+        
+        async function updateBidStatus(bidId, newStatus) {
+            const result = await postData({
+                action: 'updateRecord',
+                data: { sheetName: 'Bids', id: bidId, record: { BidStatus: newStatus } }
+            });
+            if (!result.success) alert('Failed to update status.');
+        }
+
+        // ### ADMIN: ASSIGN VENDORS ###
+        async function loadVendorsForAssignment(reqId) {
+            const vendorListDiv = document.getElementById('vendor-list');
+            // ... Fetch all users and all assignments
+            const vendors = allUsers.filter(u => u.Role === 'Vendor');
+            const assignedVendorIds = allAssignments.filter(a => a.RequirementID === reqId).map(a => a.VendorID);
+
+            vendorListDiv.innerHTML = vendors.map(v => `
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="${v.UserID}" id="vendor-${v.UserID}" ${assignedVendorIds.includes(v.UserID) ? 'checked' : ''}>
+                    <label class="form-check-label" for="vendor-${v.UserID}">${v.FullName} (${v.Email})</label>
+                </div>
+            `).join('');
+        }
+        
+        document.getElementById('save-assignments-btn').addEventListener('click', async () => {
+            const reqId = document.getElementById('adminActionModal').dataset.reqId;
+            const selectedVendorIds = Array.from(document.querySelectorAll('#vendor-list input:checked')).map(input => input.value);
+            
+            const result = await postData({
+                action: 'assignVendors',
+                data: { RequirementID: reqId, vendorIds: selectedVendorIds }
+            });
+            if (result.success) {
+                alert('Assignments saved!');
+                adminActionModal.hide();
+            } else {
+                alert('Error saving assignments.');
             }
         });
 
-        // ### 2. SHOW CORRECT DASHBOARD ###
-        function showDashboard() {
-            const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
-            if (!user) return;
-
-            loginContainer.classList.add('hidden');
-
-            if (user.Role === 'Admin') {
-                adminDashboard.classList.remove('hidden');
-                loadAdminData();
-            } else { // Assuming any other role is a Vendor
-                vendorPortal.classList.remove('hidden');
-                // loadVendorData(); // We will build this function later
-            }
-        }
-
-        // ### 3. LOAD DATA FOR ADMIN ###
-        async function loadAdminData() {
-            const loader = document.getElementById('admin-loader');
-            const table = document.getElementById('admin-req-table');
-            const tbody = document.getElementById('admin-req-tbody');
-            
-            try {
-                const response = await fetch(API_URL + '?sheet=Requirements');
-                const result = await response.json();
-                
-                if (result.success && result.data.length > 0) {
-                    tbody.innerHTML = '';
-                    result.data.forEach(req => {
-                        const row = `<tr>
-                            <td>${req.RequirementID}</td>
-                            <td>${req.ProductName}</td>
-                            <td>${req.Quantity}</td>
-                            <td>${req.Status}</td>
-                            <td>${new Date(req.Deadline).toLocaleDateString()}</td>
-                        </tr>`;
-                        tbody.innerHTML += row;
-                    });
-                    loader.classList.add('hidden');
-                    table.classList.remove('hidden');
-                } else {
-                    loader.textContent = 'No requirements found.';
-                }
-            } catch(error) {
-                loader.textContent = 'Failed to load data.';
-            }
-        }
-
-        // ### 4. LOGOUT LOGIC ###
-        function handleLogout() {
-            sessionStorage.removeItem('loggedInUser');
-            adminDashboard.classList.add('hidden');
-            vendorPortal.classList.add('hidden');
-            loginContainer.classList.remove('hidden');
-            document.getElementById('email').value = '';
-            document.getElementById('password').value = '';
-            loginError.textContent = '';
+        // ### MODIFIED: VENDOR's load data (with bid status) ###
+        async function loadVendorData(vendorId) {
+            // ... (previous logic is fine)
+            // Add bid status logic
+            const allBids = await fetchData('Bids');
+            tbody.innerHTML = '';
+            vendorReqs.forEach(req => {
+                const myBid = allBids ? allBids.find(b => b.RequirementID === req.RequirementID && b.VendorID === vendorId) : null;
+                const bidStatus = myBid ? `<span class="badge bg-${getBadgeColor(myBid.BidStatus)}">${myBid.BidStatus}</span>` : 'Not Submitted';
+                // ... create row
+                row.innerHTML = `... <td>${bidStatus}</td>`;
+            });
         }
         
-        // ### 5. CHECK ON PAGE LOAD ###
-        // If user is already logged in (e.g., page refresh), show dashboard
-        window.onload = () => {
-            if(sessionStorage.getItem('loggedInUser')) {
-                showDashboard();
+        function getBadgeColor(status) {
+            switch(status) {
+                case 'Accepted': return 'success';
+                case 'Rejected': return 'danger';
+                case 'Viewed': return 'info';
+                default: return 'secondary';
             }
+        }
+        
+        // ### MODIFIED: Helper function to handle POST requests ###
+        async function postData(payload) {
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                return await response.json();
+            } catch (error) {
+                console.error('POST Error:', error);
+                return { success: false, error: 'Network error' };
+            }
+        }
+        
+        // MODIFIED: Initialize on Page Load
+        window.onload = () => {
+            adminActionModal = new bootstrap.Modal(document.getElementById('adminActionModal'));
+            // ... (rest of the onload function)
         };
-
     </script>
 </body>
 </html>
