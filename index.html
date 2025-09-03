@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vendor Portal</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f0f2f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        .container { width: 100%; max-width: 1200px; background-color: #fff; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-radius: 8px; }
+        .hidden { display: none; }
+        /* Login Form Styles */
+        #login-container { padding: 40px; text-align: center; }
+        #login-container h1 { margin-bottom: 24px; color: #1c1e21; }
+        #login-container input { width: 100%; max-width: 320px; padding: 14px; margin-bottom: 12px; border: 1px solid #dddfe2; border-radius: 6px; font-size: 16px; }
+        #login-container button { width: 100%; max-width: 336px; padding: 14px; background-color: #1877f2; color: white; border: none; border-radius: 6px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        #login-container button:hover { background-color: #166fe5; }
+        /* Dashboard Styles */
+        .dashboard { padding: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 1px solid #dddfe2;}
+        .header h1 { margin: 0; }
+        .header button { background-color: #f02849; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { padding: 12px 15px; border: 1px solid #ddd; text-align: left; }
+        th { background-color: #4CAF50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .loader { text-align: center; padding: 40px; font-size: 1.2em; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <div id="login-container">
+            <h1>Welcome to the Portal</h1>
+            <p>Please log in to continue</p>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Email" required>
+                <br>
+                <input type="password" id="password" placeholder="Password" required>
+                <br>
+                <button type="submit">Log In</button>
+            </form>
+            <p id="login-error" style="color: red;"></p>
+        </div>
+
+        <div id="admin-dashboard" class="dashboard hidden">
+            <div class="header">
+                <h1>Admin Dashboard</h1>
+                <button onclick="handleLogout()">Logout</button>
+            </div>
+            <h2>All Requirements</h2>
+            <div id="admin-loader" class="loader">Loading... 🔄</div>
+            <table id="admin-req-table" class="hidden">
+                <thead>
+                    <tr>
+                        <th>Requirement ID</th>
+                        <th>Product Name</th>
+                        <th>Quantity</th>
+                        <th>Status</th>
+                        <th>Deadline</th>
+                    </tr>
+                </thead>
+                <tbody id="admin-req-tbody"></tbody>
+            </table>
+        </div>
+
+        <div id="vendor-portal" class="dashboard hidden">
+            <div class="header">
+                <h1>Vendor Portal</h1>
+                <button onclick="handleLogout()">Logout</button>
+            </div>
+            <h2>My Assigned Requirements</h2>
+            <p>Coming soon...</p>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = 'https://script.google.com/macros/s/AKfycby9gvB3PRYH35BG6k1pZkcxX2k-WbG4Fflz0ZVFTVxGyXrsz0EMi48tOByUMnKQvr3U/exec';
+
+        const loginContainer = document.getElementById('login-container');
+        const adminDashboard = document.getElementById('admin-dashboard');
+        const vendorPortal = document.getElementById('vendor-portal');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+
+        // ### 1. LOGIN LOGIC ###
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            loginError.textContent = 'Logging in...';
+
+            try {
+                const response = await fetch(API_URL + '?sheet=Users');
+                const result = await response.json();
+
+                if (!result.success) {
+                    throw new Error('Could not fetch user data.');
+                }
+
+                const users = result.data;
+                const foundUser = users.find(user => user.Email === email && user.Password === password);
+
+                if (foundUser) {
+                    // Login successful
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(foundUser));
+                    showDashboard();
+                } else {
+                    // Login failed
+                    loginError.textContent = 'Invalid email or password.';
+                }
+            } catch (error) {
+                loginError.textContent = 'An error occurred. Please try again.';
+                console.error('Login Error:', error);
+            }
+        });
+
+        // ### 2. SHOW CORRECT DASHBOARD ###
+        function showDashboard() {
+            const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+            if (!user) return;
+
+            loginContainer.classList.add('hidden');
+
+            if (user.Role === 'Admin') {
+                adminDashboard.classList.remove('hidden');
+                loadAdminData();
+            } else { // Assuming any other role is a Vendor
+                vendorPortal.classList.remove('hidden');
+                // loadVendorData(); // We will build this function later
+            }
+        }
+
+        // ### 3. LOAD DATA FOR ADMIN ###
+        async function loadAdminData() {
+            const loader = document.getElementById('admin-loader');
+            const table = document.getElementById('admin-req-table');
+            const tbody = document.getElementById('admin-req-tbody');
+            
+            try {
+                const response = await fetch(API_URL + '?sheet=Requirements');
+                const result = await response.json();
+                
+                if (result.success && result.data.length > 0) {
+                    tbody.innerHTML = '';
+                    result.data.forEach(req => {
+                        const row = `<tr>
+                            <td>${req.RequirementID}</td>
+                            <td>${req.ProductName}</td>
+                            <td>${req.Quantity}</td>
+                            <td>${req.Status}</td>
+                            <td>${new Date(req.Deadline).toLocaleDateString()}</td>
+                        </tr>`;
+                        tbody.innerHTML += row;
+                    });
+                    loader.classList.add('hidden');
+                    table.classList.remove('hidden');
+                } else {
+                    loader.textContent = 'No requirements found.';
+                }
+            } catch(error) {
+                loader.textContent = 'Failed to load data.';
+            }
+        }
+
+        // ### 4. LOGOUT LOGIC ###
+        function handleLogout() {
+            sessionStorage.removeItem('loggedInUser');
+            adminDashboard.classList.add('hidden');
+            vendorPortal.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+            document.getElementById('email').value = '';
+            document.getElementById('password').value = '';
+            loginError.textContent = '';
+        }
+        
+        // ### 5. CHECK ON PAGE LOAD ###
+        // If user is already logged in (e.g., page refresh), show dashboard
+        window.onload = () => {
+            if(sessionStorage.getItem('loggedInUser')) {
+                showDashboard();
+            }
+        };
+
+    </script>
+</body>
+</html>
