@@ -3,265 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro-Vendor Portal</title>
+    <title>ProcureHub - Vendor Management</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <style>
-        body { background-color: #f8f9fa; }
-        .login-container { max-width: 400px; margin-top: 10vh; }
-        .dashboard { display: none; }
-        .card-header, .modal-header { background-color: #0d6efd; color: white; }
-        .table-hover tbody tr:hover { cursor: pointer; }
+        body { font-family: 'Poppins', sans-serif; background-color: #f0f2f5; }
+        .main-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 260px; background: linear-gradient(180deg, #2c3e50, #34495e); color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar .logo { font-size: 1.5rem; font-weight: 700; text-align: center; padding-bottom: 20px; border-bottom: 1px solid #4a627a; margin-bottom: 20px; }
+        .sidebar .nav-link { color: #bdc3c7; padding: 12px 15px; border-radius: 6px; margin-bottom: 5px; transition: all 0.3s ease; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { background-color: #4a627a; color: white; }
+        .sidebar .nav-link i { margin-right: 15px; width: 20px; text-align: center; }
+        .sidebar .user-profile { margin-top: auto; border-top: 1px solid #4a627a; padding-top: 15px; text-align: center; }
+        .main-content { flex-grow: 1; padding: 25px; }
+        .top-header { display: flex; justify-content: space-between; align-items: center; background: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 25px; }
+        .stat-card { border: none; border-radius: 12px; color: white; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .stat-card .display-4 { font-weight: 700; }
+        .stat-card i { font-size: 3rem; opacity: 0.3; }
+        .login-wrapper { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        #login-container { width: 100%; max-width: 420px; }
         .nav-tabs .nav-link.active { background-color: #0d6efd; color: white; }
+        .table-hover tbody tr:hover { cursor: pointer; }
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-
-        <div id="login-container" class="card p-4 shadow-sm login-container mx-auto">
-            <h2 class="text-center mb-4">Pro-Vendor Portal Login</h2>
+    <div id="login-wrapper" class="login-wrapper">
+        <div id="login-container" class="card p-4 shadow-lg border-0">
+            <h2 class="text-center mb-1"><i class="fas fa-tasks text-primary"></i> ProcureHub</h2>
+            <p class="text-center text-muted mb-4">Login to your account</p>
             <form id="login-form">
                 <div class="mb-3"><input type="email" id="email" class="form-control" placeholder="Email" required></div>
                 <div class="mb-3"><input type="password" id="password" class="form-control" placeholder="Password" required></div>
-                <button type="submit" class="btn btn-primary w-100">Log In</button>
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Log In</button>
             </form>
-            <p id="login-error" class="text-danger mt-3 text-center"></p>
+            <p id="login-error" class="text-danger mt-3 text-center mb-0"></p>
         </div>
-
-        <div id="admin-dashboard" class="dashboard mt-4">
-            <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded shadow-sm">
-                <h1 class="h3 mb-0">Admin Dashboard</h1>
-                <button onclick="handleLogout()" class="btn btn-danger">Logout</button>
-            </div>
-            
-            <div class="card shadow-sm mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Bulk Upload Requirements</h5>
-                </div>
-                <div class="card-body">
-                    <p>Upload a .CSV or .XLSX file with columns: <strong>ProductName, Description, Quantity, DeliveryLocation, Deadline</strong>.</p>
-                    <input type="file" id="bulkUploadInput" class="form-control" accept=".csv, .xlsx">
-                    <div id="upload-status" class="mt-2"></div>
-                </div>
-            </div>
-
-            <h4>All Requirements</h4>
-            <div id="admin-loader" class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>
-            <table class="table table-hover table-bordered bg-white shadow-sm" id="admin-req-table" style="display:none;">
-                <thead class="table-dark"><tr><th>ID</th><th>Product</th><th>Quantity</th><th>Status</th><th>Deadline</th></tr></thead>
-                <tbody id="admin-req-tbody"></tbody>
-            </table>
-        </div>
-
-        <div id="vendor-portal" class="dashboard mt-4">
-             <div class="d-flex justify-content-between align-items-center mb-4 p-3 bg-light rounded shadow-sm">
-                <h1 class="h3 mb-0" id="vendor-welcome">Vendor Portal</h1>
-                <button onclick="handleLogout()" class="btn btn-danger">Logout</button>
-            </div>
-            <h4>My Assigned Requirements</h4>
-             <div id="vendor-loader" class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>
-            <table class="table table-hover table-bordered bg-white shadow-sm" id="vendor-req-table" style="display:none;">
-                <thead class="table-dark"><tr><th>ID</th><th>Product</th><th>Quantity</th><th>Deadline</th><th>My Bid Status</th></tr></thead>
-                <tbody id="vendor-req-tbody"></tbody>
-            </table>
-        </div>
-
     </div>
 
-    <div class="modal fade" id="bidModal" tabindex="-1">...</div> <div class="modal fade" id="adminActionModal" tabindex="-1">
-      <div class="modal-dialog modal-xl">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="adminActionModalTitle">Requirement Details</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body">
-            <ul class="nav nav-tabs" id="myTab" role="tablist">
-              <li class="nav-item" role="presentation"><button class="nav-link active" id="view-bids-tab" data-bs-toggle="tab" data-bs-target="#view-bids-pane" type="button">View Bids</button></li>
-              <li class="nav-item" role="presentation"><button class="nav-link" id="assign-vendors-tab" data-bs-toggle="tab" data-bs-target="#assign-vendors-pane" type="button">Assign Vendors</button></li>
-            </ul>
-            <div class="tab-content" id="myTabContent">
-              <div class="tab-pane fade show active p-3" id="view-bids-pane">
-                <div id="bids-loader" class="text-center p-4"><div class="spinner-border text-success" role="status"></div></div>
-                <table class="table table-striped" id="bids-table" style="display:none;">
-                  <thead><tr><th>Bid ID</th><th>Vendor ID</th><th>Amount</th><th>Comments</th><th>Status</th></tr></thead>
-                  <tbody id="bids-tbody"></tbody>
-                </table>
-              </div>
-              <div class="tab-pane fade p-3" id="assign-vendors-pane">
-                  <div id="vendors-loader" class="text-center p-4"><div class="spinner-border text-info" role="status"></div></div>
-                  <div id="vendor-list"></div>
-                  <button class="btn btn-primary mt-3" id="save-assignments-btn">Save Assignments</button>
-              </div>
+    <div id="app-container" class="main-container hidden">
+        <nav class="sidebar">
+            <div class="logo"><i class="fas fa-tasks"></i> ProcureHub</div>
+            <div id="admin-nav" class="hidden"><a href="#" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></div>
+            <div id="vendor-nav" class="hidden"><a href="#" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></div>
+            <div class="user-profile">
+                <h6 id="user-name-sidebar"></h6>
+                <small id="user-email-sidebar" class="text-muted"></small>
+                <button onclick="handleLogout()" class="btn btn-sm btn-outline-light w-100 mt-2"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
-          </div>
-        </div>
-      </div>
+        </nav>
+
+        <main class="main-content">
+            <div class="top-header"><h1 id="header-title" class="h4 mb-0">Dashboard</h1></div>
+            <div id="main-view">
+                <div id="admin-dashboard-view" class="hidden">
+                    <div class="row g-4 mb-4">
+                        <div class="col-md-4"><div class="stat-card bg-primary d-flex justify-content-between align-items-center"><div><h5 class="mb-0">Active Tenders</h5><p class="display-4" id="stats-active-tenders">--</p></div><i class="fas fa-file-alt"></i></div></div>
+                        <div class="col-md-4"><div class="stat-card bg-success d-flex justify-content-between align-items-center"><div><h5 class="mb-0">Registered Vendors</h5><p class="display-4" id="stats-registered-vendors">--</p></div><i class="fas fa-users"></i></div></div>
+                        <div class="col-md-4"><div class="stat-card bg-warning d-flex justify-content-between align-items-center"><div><h5 class="mb-0">Pending Bids</h5><p class="display-4" id="stats-pending-bids">--</p></div><i class="fas fa-hourglass-half"></i></div></div>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white"><h5 class="mb-0">Recent Requirements</h5></div>
+                        <div class="card-body">
+                            <div class="mb-3 p-3 bg-light border rounded"><h6><i class="fas fa-upload me-2"></i>Bulk Upload</h6><input type="file" id="bulkUploadInput" class="form-control form-control-sm" accept=".csv, .xlsx"><div id="upload-status" class="mt-2 small"></div></div>
+                            <div id="admin-loader" class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>
+                            <div class="table-responsive"><table class="table table-hover align-middle" id="admin-req-table" style="display:none;"><thead class="table-light"><tr><th>ID</th><th>Product</th><th>Quantity</th><th>Status</th><th>Deadline</th></tr></thead><tbody id="admin-req-tbody"></tbody></table></div>
+                        </div>
+                    </div>
+                </div>
+                <div id="vendor-dashboard-view" class="hidden">
+                     <div id="vendor-loader" class="text-center p-5"><div class="spinner-border text-primary" role="status"></div></div>
+                     <div class="card shadow-sm border-0">
+                         <div class="card-header bg-white"><h5 class="mb-0">My Assigned Requirements</h5></div>
+                         <div class="card-body"><div class="table-responsive"><table class="table table-hover align-middle" id="vendor-req-table" style="display:none;"><thead class="table-light"><tr><th>ID</th><th>Product</th><th>Quantity</th><th>Deadline</th><th>My Bid Status</th></tr></thead><tbody id="vendor-req-tbody"></tbody></table></div></div>
+                     </div>
+                </div>
+            </div>
+        </main>
     </div>
-    
+
+    <div class="modal fade" id="bidModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="bidModalTitle">Place Bid</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="bid-form"><input type="hidden" id="bid-req-id"><div class="mb-3"><label for="bidAmount" class="form-label">Bid Amount</label><input type="number" class="form-control" id="bidAmount" required></div><div class="mb-3"><label for="bidComments" class="form-label">Comments</label><textarea class="form-control" id="bidComments" rows="3"></textarea></div><button type="submit" class="btn btn-primary w-100">Submit Bid</button></form></div></div></div></div>
+    <div class="modal fade" id="adminActionModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="adminActionModalTitle">Requirement Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><ul class="nav nav-tabs" id="admin-modal-tabs"><li class="nav-item"><button class="nav-link active" id="view-bids-tab" data-bs-toggle="tab" data-bs-target="#view-bids-pane">View Bids</button></li><li class="nav-item"><button class="nav-link" id="assign-vendors-tab" data-bs-toggle="tab" data-bs-target="#assign-vendors-pane">Assign Vendors</button></li></ul><div class="tab-content"><div class="tab-pane fade show active p-3" id="view-bids-pane"><div id="bids-loader" class="text-center p-4"><div class="spinner-border text-success"></div></div><div class="table-responsive"><table class="table table-striped" id="bids-table" style="display:none;"><thead><tr><th>Bid ID</th><th>Vendor</th><th>Amount</th><th>Comments</th><th>Status</th></tr></thead><tbody id="bids-tbody"></tbody></table></div></div><div class="tab-pane fade p-3" id="assign-vendors-pane"><div id="vendors-loader" class="text-center p-4"><div class="spinner-border text-info"></div></div><div id="vendor-list"></div><button class="btn btn-primary mt-3" id="save-assignments-btn">Save Assignments</button></div></div></div></div></div></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    
     <script>
-        // API URL and Global Variables
-        const API_URL = 'https://script.google.com/macros/s/AKfycby9gvB3PRYH35BG6k1pZkcxX2k-WbG4Fflz0ZVFTVxGyXrsz0EMi48tOByUMnKQvr3U/exec'; // Replace with your actual URL
-        let adminActionModal;
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxSIpAUhg1Ph_pZBIcSG4b1VSv4xoyzOM1Iyr7jPsU/dev';
+
+        // DOM Elements
+        const loginWrapper = document.getElementById('login-wrapper');
+        const appContainer = document.getElementById('app-container');
+        const loginForm = document.getElementById('login-form');
+        const loginError = document.getElementById('login-error');
+        // Views
+        const adminDashboardView = document.getElementById('admin-dashboard-view');
+        const vendorDashboardView = document.getElementById('vendor-dashboard-view');
         
-        // ... (Paste all JavaScript code from the previous step here) ...
-        // We will now add NEW and MODIFIED functions below
+        let bidModal, adminActionModal, allUsersCache = [];
 
-        // ===============================================
-        //  NEW & MODIFIED JAVASCRIPT FUNCTIONS START HERE
-        // ===============================================
+        // --- CORE APP LOGIC ---
+        window.onload = () => {
+            bidModal = new bootstrap.Modal(document.getElementById('bidModal'));
+            adminActionModal = new bootstrap.Modal(document.getElementById('adminActionModal'));
+            if (sessionStorage.getItem('loggedInUser')) {
+                showDashboard();
+            }
+        };
 
-        // ### ADMIN: BULK UPLOAD ###
-        document.getElementById('bulkUploadInput').addEventListener('change', handleFileUpload);
-        async function handleFileUpload(event) {
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            loginError.textContent = 'Logging in...';
+            const result = await fetchData('Users');
+            if (result) {
+                const foundUser = result.find(user => user.Email === email && user.Password === password);
+                if (foundUser) {
+                    sessionStorage.setItem('loggedInUser', JSON.stringify(foundUser));
+                    showDashboard();
+                } else {
+                    loginError.textContent = 'Invalid email or password.';
+                }
+            } else {
+                loginError.textContent = 'Could not connect to server.';
+            }
+        });
+
+        function showDashboard() {
+            const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+            if (!user) return;
+            loginWrapper.classList.add('hidden');
+            appContainer.classList.remove('hidden');
+            document.getElementById('user-name-sidebar').textContent = user.FullName;
+            document.getElementById('user-email-sidebar').textContent = user.Email;
+
+            if (user.Role === 'Admin') {
+                document.getElementById('admin-nav').classList.remove('hidden');
+                document.getElementById('vendor-nav').classList.add('hidden');
+                adminDashboardView.classList.remove('hidden');
+                vendorDashboardView.classList.add('hidden');
+                loadAdminData();
+            } else {
+                document.getElementById('admin-nav').classList.add('hidden');
+                document.getElementById('vendor-nav').classList.remove('hidden');
+                adminDashboardView.classList.add('hidden');
+                vendorDashboardView.classList.remove('hidden');
+                loadVendorData(user.UserID);
+            }
+        }
+
+        function handleLogout() {
+            sessionStorage.removeItem('loggedInUser');
+            window.location.reload();
+        }
+
+        // --- ADMIN FUNCTIONS ---
+        async function loadAdminData() {
+            const loader = document.getElementById('admin-loader');
+            const table = document.getElementById('admin-req-table');
+            const tbody = document.getElementById('admin-req-tbody');
+            loader.style.display = 'block';
+            table.style.display = 'none';
+
+            const [reqs, users, bids] = await Promise.all([fetchData('Requirements'), fetchData('Users'), fetchData('Bids')]);
+            allUsersCache = users || [];
+
+            document.getElementById('stats-active-tenders').textContent = reqs ? reqs.filter(r => r.Status === 'Active').length : 0;
+            document.getElementById('stats-registered-vendors').textContent = users ? users.filter(u => u.Role === 'Vendor').length : 0;
+            document.getElementById('stats-pending-bids').textContent = bids ? bids.filter(b => b.BidStatus === 'Submitted').length : 0;
+            
+            if (reqs) {
+                tbody.innerHTML = '';
+                reqs.forEach(req => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${req.Quantity}</td><td>${req.Status}</td><td>${new Date(req.Deadline).toLocaleDateString()}</td>`;
+                    row.onclick = () => openAdminActionModal(req.RequirementID);
+                    tbody.appendChild(row);
+                });
+                table.style.display = 'table';
+            }
+            loader.style.display = 'none';
+        }
+
+        document.getElementById('bulkUploadInput').addEventListener('change', async (event) => {
             const file = event.target.files[0];
             if (!file) return;
             const statusDiv = document.getElementById('upload-status');
-            statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"></div> Reading file...`;
+            statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm"></div> Reading file...`;
+            const data = await file.arrayBuffer();
+            let requirements = [];
+            if (file.name.endsWith('.csv')) {
+                const text = new TextDecoder("utf-8").decode(data);
+                requirements = Papa.parse(text, { header: true, skipEmptyLines: true }).data;
+            } else {
+                const workbook = XLSX.read(data, { type: 'array' });
+                requirements = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
+            }
+            if (requirements.length > 0) {
+                statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm"></div> Uploading ${requirements.length} records...`;
+                const result = await postData({ action: 'bulkUploadRequirements', data: requirements });
+                statusDiv.innerHTML = result.success ? `<span class="text-success">${result.message}</span>` : `<span class="text-danger">Error: ${result.error}</span>`;
+                if(result.success) loadAdminData();
+            }
+        });
 
-            const reader = new FileReader();
-            reader.onload = async (e) => {
-                const data = e.target.result;
-                let requirements = [];
-                if (file.name.endsWith('.csv')) {
-                    requirements = Papa.parse(data, { header: true, skipEmptyLines: true }).data;
-                } else {
-                    const workbook = XLSX.read(data, { type: 'binary' });
-                    const sheetName = workbook.SheetNames[0];
-                    requirements = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-                }
-                
-                if (requirements.length > 0) {
-                    statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"></div> Uploading ${requirements.length} records...`;
-                    const result = await postData({ action: 'bulkUploadRequirements', data: requirements });
-                    if (result.success) {
-                        statusDiv.innerHTML = `<span class="text-success">${result.message}</span>`;
-                        loadAdminData(); // Refresh the list
-                    } else {
-                        statusDiv.innerHTML = `<span class="text-danger">Error: ${result.error}</span>`;
-                    }
-                } else {
-                    statusDiv.textContent = 'No data found in file.';
-                }
-            };
-            if (file.name.endsWith('.csv')) reader.readAsText(file);
-            else reader.readAsBinaryString(file);
-        }
-
-        // ### MODIFIED: ADMIN's open modal function ###
         async function openAdminActionModal(reqId) {
             adminActionModal.show();
             document.getElementById('adminActionModalTitle').textContent = `Details for ${reqId}`;
-            // Store reqId in the modal for other functions to use
             document.getElementById('adminActionModal').dataset.reqId = reqId;
-
-            // Reset tabs
             document.getElementById('view-bids-tab').click();
             loadBidsForAdmin(reqId);
             loadVendorsForAssignment(reqId);
         }
 
-        // ### ADMIN: LOAD BIDS (with Status Update) ###
         async function loadBidsForAdmin(reqId) {
-            // ... (similar to openViewBidsModal logic from before)
-            // BUT with a status dropdown
+            const bidsTbody = document.getElementById('bids-tbody');
+            document.getElementById('bids-loader').style.display = 'block';
+            document.getElementById('bids-table').style.display = 'none';
             bidsTbody.innerHTML = '';
-            relevantBids.forEach(bid => {
-                const statusOptions = ['Submitted', 'Viewed', 'Accepted', 'Rejected']
-                    .map(s => `<option value="${s}" ${s === bid.BidStatus ? 'selected' : ''}>${s}</option>`).join('');
-                
-                bidsTbody.innerHTML += `<tr>
-                    <td>${bid.BidID}</td><td>${bid.VendorID}</td><td>$${bid.BidAmount}</td><td>${bid.Comments}</td>
-                    <td><select class="form-select" onchange="updateBidStatus('${bid.BidID}', this.value)">${statusOptions}</select></td>
-                </tr>`;
-            });
-        }
-        
-        async function updateBidStatus(bidId, newStatus) {
-            const result = await postData({
-                action: 'updateRecord',
-                data: { sheetName: 'Bids', id: bidId, record: { BidStatus: newStatus } }
-            });
-            if (!result.success) alert('Failed to update status.');
+            const allBids = await fetchData('Bids');
+            if(allBids) {
+                const relevantBids = allBids.filter(bid => bid.RequirementID === reqId);
+                if(relevantBids.length > 0) {
+                     relevantBids.forEach(bid => {
+                        const vendorName = allUsersCache.find(u => u.UserID === bid.VendorID)?.FullName || bid.VendorID;
+                        const statusOptions = ['Submitted', 'Viewed', 'Accepted', 'Rejected'].map(s => `<option value="${s}" ${s === bid.BidStatus ? 'selected' : ''}>${s}</option>`).join('');
+                        bidsTbody.innerHTML += `<tr><td>${bid.BidID}</td><td>${vendorName}</td><td>$${bid.BidAmount}</td><td>${bid.Comments}</td><td><select class="form-select form-select-sm" onchange="updateBidStatus('${bid.BidID}', this.value)">${statusOptions}</select></td></tr>`;
+                    });
+                } else {
+                    bidsTbody.innerHTML = '<tr><td colspan="5" class="text-center">No bids submitted yet.</td></tr>';
+                }
+            }
+            document.getElementById('bids-loader').style.display = 'none';
+            document.getElementById('bids-table').style.display = 'table';
         }
 
-        // ### ADMIN: ASSIGN VENDORS ###
+        async function updateBidStatus(bidId, newStatus) {
+            await postData({ action: 'updateRecord', data: { sheetName: 'Bids', id: bidId, record: { BidStatus: newStatus } } });
+        }
+
         async function loadVendorsForAssignment(reqId) {
             const vendorListDiv = document.getElementById('vendor-list');
-            // ... Fetch all users and all assignments
-            const vendors = allUsers.filter(u => u.Role === 'Vendor');
-            const assignedVendorIds = allAssignments.filter(a => a.RequirementID === reqId).map(a => a.VendorID);
-
-            vendorListDiv.innerHTML = vendors.map(v => `
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="${v.UserID}" id="vendor-${v.UserID}" ${assignedVendorIds.includes(v.UserID) ? 'checked' : ''}>
-                    <label class="form-check-label" for="vendor-${v.UserID}">${v.FullName} (${v.Email})</label>
-                </div>
-            `).join('');
+            document.getElementById('vendors-loader').style.display = 'block';
+            vendorListDiv.innerHTML = '';
+            const [assignments, users] = await Promise.all([fetchData('RequirementAssignments'), allUsersCache.length > 0 ? allUsersCache : fetchData('Users')]);
+            if(users) {
+                const vendors = users.filter(u => u.Role === 'Vendor');
+                const assignedVendorIds = assignments ? assignments.filter(a => a.RequirementID === reqId).map(a => a.VendorID) : [];
+                vendorListDiv.innerHTML = vendors.map(v => `<div class="form-check"><input class="form-check-input" type="checkbox" value="${v.UserID}" id="v-${v.UserID}" ${assignedVendorIds.includes(v.UserID) ? 'checked' : ''}><label class="form-check-label" for="v-${v.UserID}">${v.FullName} (${v.Email})</label></div>`).join('');
+            }
+            document.getElementById('vendors-loader').style.display = 'none';
         }
         
         document.getElementById('save-assignments-btn').addEventListener('click', async () => {
             const reqId = document.getElementById('adminActionModal').dataset.reqId;
             const selectedVendorIds = Array.from(document.querySelectorAll('#vendor-list input:checked')).map(input => input.value);
-            
-            const result = await postData({
-                action: 'assignVendors',
-                data: { RequirementID: reqId, vendorIds: selectedVendorIds }
-            });
-            if (result.success) {
-                alert('Assignments saved!');
-                adminActionModal.hide();
-            } else {
-                alert('Error saving assignments.');
-            }
+            const result = await postData({ action: 'assignVendors', data: { RequirementID: reqId, vendorIds: selectedVendorIds } });
+            if (result.success) { alert('Assignments saved!'); adminActionModal.hide(); } else { alert('Error saving assignments.'); }
         });
 
-        // ### MODIFIED: VENDOR's load data (with bid status) ###
+        // --- VENDOR FUNCTIONS ---
         async function loadVendorData(vendorId) {
-            // ... (previous logic is fine)
-            // Add bid status logic
-            const allBids = await fetchData('Bids');
-            tbody.innerHTML = '';
-            vendorReqs.forEach(req => {
-                const myBid = allBids ? allBids.find(b => b.RequirementID === req.RequirementID && b.VendorID === vendorId) : null;
-                const bidStatus = myBid ? `<span class="badge bg-${getBadgeColor(myBid.BidStatus)}">${myBid.BidStatus}</span>` : 'Not Submitted';
-                // ... create row
-                row.innerHTML = `... <td>${bidStatus}</td>`;
-            });
+             const loader = document.getElementById('vendor-loader');
+             const table = document.getElementById('vendor-req-table');
+             const tbody = document.getElementById('vendor-req-tbody');
+             loader.style.display = 'block'; table.style.display = 'none';
+
+             const [allReqs, allAssignments, allBids] = await Promise.all([fetchData('Requirements'), fetchData('RequirementAssignments'), fetchData('Bids')]);
+             if(allReqs && allAssignments) {
+                const assignedReqIds = allAssignments.filter(a => a.VendorID === vendorId).map(a => a.RequirementID);
+                const vendorReqs = allReqs.filter(r => assignedReqIds.includes(r.RequirementID) && r.Status === 'Active');
+                tbody.innerHTML = '';
+                vendorReqs.forEach(req => {
+                    const myBid = allBids ? allBids.find(b => b.RequirementID === req.RequirementID && b.VendorID === vendorId) : null;
+                    const bidStatus = myBid ? `<span class="badge bg-${getBadgeColor(myBid.BidStatus)}">${myBid.BidStatus}</span>` : 'Not Submitted';
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${req.Quantity}</td><td>${new Date(req.Deadline).toLocaleDateString()}</td><td>${bidStatus}</td>`;
+                    row.onclick = () => openBidModal(req);
+                    tbody.appendChild(row);
+                });
+                table.style.display = 'table';
+             }
+             loader.style.display = 'none';
         }
-        
-        function getBadgeColor(status) {
-            switch(status) {
-                case 'Accepted': return 'success';
-                case 'Rejected': return 'danger';
-                case 'Viewed': return 'info';
-                default: return 'secondary';
-            }
+
+        function openBidModal(req) {
+            document.getElementById('bidModalTitle').textContent = `Bid for: ${req.ProductName}`;
+            document.getElementById('bid-req-id').value = req.RequirementID;
+            document.getElementById('bid-form').reset();
+            bidModal.show();
         }
-        
-        // ### MODIFIED: Helper function to handle POST requests ###
+
+        document.getElementById('bid-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+            const result = await postData({ action: 'createBid', data: { RequirementID: document.getElementById('bid-req-id').value, VendorID: user.UserID, BidAmount: document.getElementById('bidAmount').value, Comments: document.getElementById('bidComments').value, BidStatus: 'Submitted' } });
+            if (result.success) { alert('Bid submitted!'); bidModal.hide(); loadVendorData(user.UserID); } else { alert('Error: ' + result.error); }
+        });
+
+        // --- UTILITY FUNCTIONS ---
+        async function fetchData(sheetName) {
+            try {
+                const response = await fetch(`${API_URL}?sheet=${sheetName}`);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                return result.success ? result.data : null;
+            } catch (error) { console.error(`Failed to fetch ${sheetName}:`, error); return null; }
+        }
         async function postData(payload) {
             try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
+                const response = await fetch(API_URL, { method: 'POST', body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 return await response.json();
-            } catch (error) {
-                console.error('POST Error:', error);
-                return { success: false, error: 'Network error' };
-            }
+            } catch (error) { console.error('POST Error:', error); return { success: false, error: 'Network error' }; }
         }
-        
-        // MODIFIED: Initialize on Page Load
-        window.onload = () => {
-            adminActionModal = new bootstrap.Modal(document.getElementById('adminActionModal'));
-            // ... (rest of the onload function)
-        };
+        function getBadgeColor(status) {
+            const colors = { 'Accepted': 'success', 'Rejected': 'danger', 'Viewed': 'info' };
+            return colors[status] || 'secondary';
+        }
     </script>
 </body>
 </html>
