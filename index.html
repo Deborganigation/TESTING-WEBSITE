@@ -202,7 +202,12 @@
 
         // --- GLOBAL CACHE & STATE ---
         let APP_DATA = {};
-        const navHistory = { stack: [], forwardStack: [] };
+        const navHistory = {
+            stack: [], forwardStack: [],
+            push(viewId) { if (this.stack[this.stack.length - 1] !== viewId) { this.stack.push(viewId); this.forwardStack = []; } },
+            back() { if (this.stack.length > 1) { this.forwardStack.push(this.stack.pop()); return this.stack[this.stack.length - 1]; } return null; },
+            forward() { if (this.forwardStack.length > 0) { const nextView = this.forwardStack.pop(); this.stack.push(nextView); return nextView; } return null; }
+        };
         const loginWrapper = document.getElementById('login-wrapper'), appContainer = document.getElementById('app-container');
         const loginForm = document.getElementById('login-form'), loginError = document.getElementById('login-error');
         const mainView = document.getElementById('main-view'), headerTitle = document.getElementById('header-title');
@@ -220,7 +225,7 @@
             if (sessionStorage.getItem('loggedInUser')) {
                 const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
                 setupUIForRole(user);
-                getData('Users').then(() => navigateTo(getDefaultViewForRole(user.Role)));
+                navigateTo(getDefaultViewForRole(user.Role));
             }
         };
         
@@ -247,7 +252,7 @@
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             loginError.textContent = 'Authenticating...';
-            const users = await getData('Users');
+            const users = await getData('Users', true); // Force refresh users on login
             if (users) {
                 const foundUser = users.find(user => user.Email === document.getElementById('email').value && user.Password === document.getElementById('password').value);
                 if (foundUser) {
@@ -293,14 +298,7 @@
             };
             viewLoadFunctions[viewId]?.();
         }
-
-        const navHistory = {
-            stack: [], forwardStack: [],
-            push(viewId) { if (this.stack[this.stack.length - 1] !== viewId) { this.stack.push(viewId); this.forwardStack = []; } },
-            back() { if (this.stack.length > 1) { this.forwardStack.push(this.stack.pop()); return this.stack[this.stack.length - 1]; } return null; },
-            forward() { if (this.forwardStack.length > 0) { const nextView = this.forwardStack.pop(); this.stack.push(nextView); return nextView; } return null; }
-        };
-
+        
         function updateNavControls() {
             document.getElementById('nav-back').disabled = navHistory.stack.length <= 1;
             document.getElementById('nav-next').disabled = navHistory.forwardStack.length === 0;
@@ -331,7 +329,7 @@
             const ctx = document.getElementById('adminChart').getContext('2d');
             const statusCounts = (reqs || []).reduce((acc, req) => { acc[req.Status] = (acc[req.Status] || 0) + 1; return acc; }, {});
             if (adminChart) adminChart.destroy();
-            adminChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(statusCounts), datasets: [{ label: 'Status', data: Object.values(statusCounts), backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#6c757d'] }] }, options: { responsive: true, maintainAspectRatio: false } });
+            adminChart = new Chart(ctx, { type: 'doughnut', data: { labels: Object.keys(statusCounts), datasets: [{ label: 'Status', data: Object.values(statusCounts), backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#6c757d', '#dc3545'] }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
         
         async function loadAdminRequirements() {
@@ -353,9 +351,12 @@
         async function loadAdminAwardedContracts() {
             const loader = document.getElementById('admin-awarded-loader'), table = document.getElementById('admin-awarded-table'), tbody = document.getElementById('admin-awarded-tbody');
             loader.style.display = 'block'; table.style.display = 'none';
-            const awarded = await getData('AwardedContracts');
+            const [awarded, users] = await Promise.all([getData('AwardedContracts'), getData('Users')]);
             tbody.innerHTML = (awarded || []).length > 0 ? '' : '<tr><td colspan="5" class="text-center">No contracts awarded yet.</td></tr>';
-            (awarded || []).forEach(c => { tbody.innerHTML += `<tr><td>${c.ContractID}</td><td>${c.ProductName}</td><td>${c.VendorName}</td><td>₹${c.AwardedAmount}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td></tr>`; });
+            (awarded || []).forEach(c => {
+                 const vendorName = c.VendorName || (users || []).find(u => u.UserID === c.VendorID)?.FullName || c.VendorID;
+                 tbody.innerHTML += `<tr><td>${c.ContractID}</td><td>${c.ProductName}</td><td>${vendorName}</td><td>₹${c.AwardedAmount}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td></tr>`;
+            });
             table.style.display = 'table'; loader.style.display = 'none';
         }
 
@@ -425,7 +426,7 @@
                     const rank = `L${index + 1}`;
                     const vendorName = (allUsers || []).find(u => u.UserID === bid.VendorID)?.FullName || bid.VendorID;
                     const statusOptions = ['Submitted', 'Viewed', 'Accepted', 'Rejected'].map(s => `<option value="${s}" ${s === bid.BidStatus ? 'selected' : ''}>${s}</option>`).join('');
-                    bidsTbody.innerHTML += `<tr><td><span class="badge bg-info">${rank}</span></td><td>${vendorName}</td><td>₹${bid.BidAmount}</td><td>${bid.Comments}</td><td><select class="form-select form-select-sm" onchange="updateBidStatus('${bid.BidID}', this.value)">${statusOptions}</select></td><td><button class="btn btn-sm btn-success" onclick='awardContract(${JSON.stringify(bid)})'>Award</button></td></tr>`;
+                    bidsTbody.innerHTML += `<tr><td><span class="badge bg-info">${rank}</span></td><td>${vendorName}</td><td>₹${bid.BidAmount}</td><td>${bid.Comments}</td><td><select class="form-select form-select-sm" onchange="updateBidStatus('${bid.BidID}', this.value)" ${bid.BidStatus === 'Awarded' ? 'disabled' : ''}>${statusOptions}</select></td><td><button class="btn btn-sm btn-success" onclick='awardContract(${JSON.stringify(bid)})' ${bid.BidStatus === 'Awarded' ? 'disabled' : ''}>Award</button></td></tr>`;
                 });
             } else { bidsTbody.innerHTML = '<tr><td colspan="6" class="text-center">No bids submitted yet.</td></tr>'; }
             document.getElementById('bids-loader').style.display = 'none'; document.getElementById('bids-table').style.display = 'table';
@@ -444,7 +445,7 @@
                 alert('Contract awarded successfully!');
                 adminActionModal.hide();
                 await Promise.all([getData('Requirements', true), getData('Bids', true), getData('AwardedContracts', true)]);
-                loadAdminRequirements();
+                navigateTo('admin-requirements-view');
             } else { alert('Error awarding contract.'); }
         }
 
