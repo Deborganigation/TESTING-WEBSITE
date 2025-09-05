@@ -13,7 +13,7 @@ const loginWrapper = document.getElementById('login-wrapper'), appContainer = do
 const loginForm = document.getElementById('login-form'), loginError = document.getElementById('login-error');
 const mainView = document.getElementById('main-view'), headerTitle = document.getElementById('header-title');
 const navLinksContainer = document.getElementById('nav-links');
-let registerModal, bidModal, adminActionModal, adminChart, vendorAmountChart, reqStatusChart;
+let registerModal, bidModal, adminActionModal, vendorAmountChart, reqStatusChart;
 
 // --- CORE APP LOGIC ---
 window.onload = () => {
@@ -40,8 +40,11 @@ async function getData(sheetName, forceRefresh = false) {
         const result = await response.json();
         if (result.success) { APP_DATA[sheetName] = result.data; return result.data; }
         return null;
-    } catch (error) { console.error(`Failed to fetch ${sheetName}:`, error); return null; }
-    finally { hideLoader(); }
+    } catch (error) { 
+        console.error(`Failed to fetch ${sheetName}:`, error);
+        showToast(`Failed to load ${sheetName} data.`, 'error');
+        return null; 
+    } finally { hideLoader(); }
 }
 
 async function postData(payload) {
@@ -123,7 +126,10 @@ function updateNavControls() {
 }
 document.getElementById('nav-back').addEventListener('click', () => { const prev = navHistory.back(); if(prev) navigateTo(prev, true); });
 document.getElementById('nav-next').addEventListener('click', () => { const next = navHistory.forward(); if(next) navigateTo(next, true); });
-document.getElementById('nav-home').addEventListener('click', () => navigateTo(getDefaultViewForRole('Admin')));
+document.getElementById('nav-home').addEventListener('click', () => {
+    const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+    navigateTo(getDefaultViewForRole(user.Role));
+});
 
 function setupUIForRole(user) {
     loginWrapper.classList.add('hidden'); appContainer.classList.remove('hidden');
@@ -144,8 +150,6 @@ function getDefaultViewForRole(role) { return { 'Admin': 'admin-dashboard-view',
 
 // --- ADMIN FUNCTIONS ---
 async function loadAdminDashboard() {
-    document.getElementById('admin-dashboard-reqs').innerHTML = '<div class="list-group-item text-center"><div class="spinner-border spinner-border-sm"></div></div>';
-    document.getElementById('admin-dashboard-bids').innerHTML = '<div class="list-group-item text-center"><div class="spinner-border spinner-border-sm"></div></div>';
     const [reqs, users, bids, awarded] = await Promise.all([getData('Requirements'), getData('Users'), getData('Bids'), getData('AwardedContracts')]);
     document.getElementById('stats-active-tenders').textContent = (reqs || []).filter(r => r.Status === 'Active').length;
     document.getElementById('stats-registered-vendors').textContent = (users || []).filter(u => u.Role === 'Vendor').length;
@@ -231,6 +235,7 @@ async function approveUser(tempId) {
 
 async function loadAdminReports() {
     const [bids, users, reqs] = await Promise.all([getData('Bids'), getData('Users'), getData('Requirements')]);
+    
     const vendorAmounts = (bids || []).reduce((acc, bid) => {
         const vendorName = (users || []).find(u => u.UserID === bid.VendorID)?.FullName || bid.VendorID;
         acc[vendorName] = (acc[vendorName] || 0) + parseFloat(bid.BidAmount);
@@ -239,6 +244,7 @@ async function loadAdminReports() {
     const vCtx = document.getElementById('vendorAmountChart').getContext('2d');
     if (window.vendorAmountChart) window.vendorAmountChart.destroy();
     window.vendorAmountChart = new Chart(vCtx, { type: 'bar', data: { labels: Object.keys(vendorAmounts), datasets: [{ label: 'Total Bid Amount (₹)', data: Object.values(vendorAmounts), backgroundColor: '#28a745'}] }, options: { indexAxis: 'y' } });
+
     const statusCounts = (reqs || []).reduce((acc, req) => { acc[req.Status] = (acc[req.Status] || 0) + 1; return acc; }, {});
     const rCtx = document.getElementById('reqStatusChart').getContext('2d');
     if (window.reqStatusChart) window.reqStatusChart.destroy();
@@ -286,7 +292,7 @@ async function loadBidsForAdmin(reqId) {
 
 async function updateBidStatus(bidId, newStatus) { 
     const result = await postData({ action: 'updateRecord', data: { sheetName: 'Bids', id: bidId, record: { BidStatus: newStatus } } });
-    if(result.success) { await getData('Bids', true); showToast('Status Updated!'); }
+    if(result.success) { showToast('Status Updated!'); await getData('Bids', true); }
 }
 
 async function awardContract(bid) {
@@ -331,6 +337,7 @@ async function loadVendorDashboard(vendorId) {
     document.getElementById('vendor-stats-assigned').textContent = assignedReqs.filter(r => r.Status === 'Active').length;
     document.getElementById('vendor-stats-submitted').textContent = myBids.length;
     document.getElementById('vendor-stats-won').textContent = myBids.filter(b => b.BidStatus === 'Awarded').length;
+
     tbody.innerHTML = '';
     assignedReqs.forEach(req => {
         const myBidsForThisReq = myBids.filter(b => b.RequirementID === req.RequirementID);
@@ -397,7 +404,8 @@ document.getElementById('download-history-btn').addEventListener('click', () => 
 });
 
 // --- USER FUNCTIONS ---
-async function loadUserDashboard() { navigateTo('user-create-req-view'); }
+function loadUserDashboard() { navigateTo('user-create-req-view'); }
+
 async function loadUserCreateReq() {
     const checklistDiv = document.getElementById('req-vendor-checklist');
     checklistDiv.innerHTML = '<p class="text-muted">Loading vendors...</p>';
