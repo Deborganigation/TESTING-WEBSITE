@@ -109,14 +109,17 @@ function navigateTo(viewId, fromHistory = false) {
         'admin-pending-users-view': loadPendingUsers, 'admin-reports-view': loadAdminReports,
         'vendor-dashboard-view': () => loadVendorDashboard(JSON.parse(sessionStorage.getItem('loggedInUser')).UserID),
         'vendor-awarded-view': () => loadVendorAwarded(JSON.parse(sessionStorage.getItem('loggedInUser')).UserID),
-        'user-create-req-view': loadUserCreateReq, 'user-status-view': loadUserStatusView
+        'user-create-req-view': loadUserCreateReq, 'user-status-view': loadUserStatusView,
     };
     viewLoadFunctions[viewId]?.();
 }
 
 function updateNavControls() {
-    document.getElementById('nav-back').disabled = navHistory.stack.length <= 1;
-    document.getElementById('nav-next').disabled = navHistory.forwardStack.length === 0;
+    const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+    if(user.Role === 'Admin' || user.Role === 'Vendor') {
+        document.getElementById('nav-back').disabled = navHistory.stack.length <= 1;
+        document.getElementById('nav-next').disabled = navHistory.forwardStack.length === 0;
+    }
 }
 document.getElementById('nav-back').addEventListener('click', () => { const prev = navHistory.back(); if(prev) navigateTo(prev, true); });
 document.getElementById('nav-next').addEventListener('click', () => { const next = navHistory.forward(); if(next) navigateTo(next, true); });
@@ -155,7 +158,7 @@ async function loadAdminDashboard() {
         pendingReqsDiv.innerHTML += `<a href="#" onclick="navigateTo('admin-pending-reqs-view')" class="list-group-item list-group-item-action clickable">${req.ProductName}<small class="d-block text-muted">by ${creatorName}</small></a>`;
     });
 
-    const recentBids = (bids || []).filter(b => b.BidStatus === 'Submitted').slice(0, 5);
+    const recentBids = (bids || []).filter(b => b.BidStatus === 'Submitted').sort((a,b) => new Date(b.SubmittedAt) - new Date(a.SubmittedAt)).slice(0, 5);
     const recentBidsDiv = document.getElementById('admin-dashboard-bids');
     recentBidsDiv.innerHTML = recentBids.length > 0 ? '' : '<div class="list-group-item text-center text-muted p-4">No recent bids.</div>';
     recentBids.forEach(bid => {
@@ -264,7 +267,8 @@ async function loadBidsForAdmin(reqId) {
 }
 
 async function updateBidStatus(bidId, newStatus) { 
-    await postData({ action: 'updateRecord', data: { sheetName: 'Bids', id: bidId, record: { BidStatus: newStatus } } });
+    const result = await postData({ action: 'updateRecord', data: { sheetName: 'Bids', id: bidId, record: { BidStatus: newStatus } } });
+    if(result.success) { showToast('Status Updated!'); await getData('Bids', true); }
 }
 
 async function awardContract(bid) {
@@ -290,7 +294,7 @@ async function loadVendorsForAssignment(reqId) {
     vendorListDiv.innerHTML = vendors.map(v => `<div class="form-check"><input class="form-check-input" type="checkbox" value="${v.UserID}" id="v-${v.UserID}" ${assignedVendorIds.includes(v.UserID) ? 'checked' : ''}><label class="form-check-label" for="v-${v.UserID}">${v.FullName}</label></div>`).join('');
     document.getElementById('vendors-loader').style.display = 'none';
 }
-
+        
 document.getElementById('save-assignments-btn').addEventListener('click', async () => {
     const reqId = document.getElementById('adminActionModal').dataset.reqId;
     const selectedVendorIds = Array.from(document.querySelectorAll('#vendor-list input:checked')).map(input => input.value);
@@ -303,12 +307,15 @@ async function loadVendorDashboard(vendorId) {
     const loader = document.getElementById('vendor-loader'), table = document.getElementById('vendor-req-table'), tbody = document.getElementById('vendor-req-tbody');
     loader.style.display = 'block'; table.style.display = 'none';
     const [allReqs, allAssignments, allBids] = await Promise.all([getData('Requirements'), getData('RequirementAssignments'), getData('Bids')]);
+    
     const myBids = (allBids || []).filter(b => b.VendorID === vendorId);
     const assignedReqIds = (allAssignments || []).filter(a => a.VendorID === vendorId).map(a => a.RequirementID);
     const assignedReqs = (allReqs || []).filter(r => assignedReqIds.includes(r.RequirementID));
+    
     document.getElementById('vendor-stats-assigned').textContent = assignedReqs.filter(r => r.Status === 'Active').length;
     document.getElementById('vendor-stats-submitted').textContent = myBids.length;
     document.getElementById('vendor-stats-won').textContent = myBids.filter(b => b.BidStatus === 'Awarded').length;
+
     tbody.innerHTML = '';
     assignedReqs.forEach(req => {
         const myBidsForThisReq = myBids.filter(b => b.RequirementID === req.RequirementID);
@@ -375,9 +382,8 @@ document.getElementById('download-history-btn').addEventListener('click', () => 
 });
 
 // --- USER FUNCTIONS ---
-async function loadUserDashboard() {
-    navigateTo('user-create-req-view');
-}
+function loadUserDashboard() { navigateTo('user-create-req-view'); }
+
 async function loadUserCreateReq() {
     const checklistDiv = document.getElementById('req-vendor-checklist');
     checklistDiv.innerHTML = '<p class="text-muted">Loading vendors...</p>';
@@ -392,6 +398,7 @@ async function loadUserCreateReq() {
         } else { checklistDiv.innerHTML = '<p class="text-danger">No registered vendors found.</p>'; }
     }
 }
+
 async function loadUserStatusView() {
     const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
     const listDiv = document.getElementById('user-req-status-list');
@@ -410,6 +417,7 @@ async function loadUserStatusView() {
     } else { listDiv.innerHTML = '<div class="list-group-item">You have not created any requisitions yet.</div>'; }
     document.getElementById('user-req-status-loader').style.display = 'none';
 }
+
 document.getElementById('requisition-form').addEventListener('submit', async function(e) {
     e.preventDefault();
     const submitButton = this.querySelector('button[type="submit"]');
@@ -459,10 +467,13 @@ async function downloadAdvancedRequirementsReport() {
     const csv = Papa.unparse(reportData);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "advanced_requirements_report.csv";
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", "advanced_requirements_report.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
     link.click();
-    URL.revokeObjectURL(link.href);
+    document.body.removeChild(link);
 }
 function showToast(message, type = 'success') {
     const toastContainer = document.getElementById('toast-container');
