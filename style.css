@@ -17,6 +17,7 @@ body { font-family: 'Poppins', sans-serif; background-color: var(--content-bg); 
 @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
 
 #login-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: #343a40; }
+#login-video-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; filter: brightness(0.4); }
 #login-container { width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; }
 
 .main-container { display: flex; min-height: 100vh; }
