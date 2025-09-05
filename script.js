@@ -13,7 +13,7 @@ const loginWrapper = document.getElementById('login-wrapper'), appContainer = do
 const loginForm = document.getElementById('login-form'), loginError = document.getElementById('login-error');
 const mainView = document.getElementById('main-view'), headerTitle = document.getElementById('header-title');
 const navLinksContainer = document.getElementById('nav-links');
-let registerModal, bidModal, adminActionModal, vendorAmountChart, reqStatusChart;
+let registerModal, bidModal, adminActionModal, adminChart, vendorAmountChart, reqStatusChart;
 
 // --- CORE APP LOGIC ---
 window.onload = () => {
@@ -150,6 +150,8 @@ function getDefaultViewForRole(role) { return { 'Admin': 'admin-dashboard-view',
 
 // --- ADMIN FUNCTIONS ---
 async function loadAdminDashboard() {
+    document.getElementById('admin-dashboard-reqs').innerHTML = '<div class="list-group-item text-center"><div class="spinner-border spinner-border-sm"></div></div>';
+    document.getElementById('admin-dashboard-bids').innerHTML = '<div class="list-group-item text-center"><div class="spinner-border spinner-border-sm"></div></div>';
     const [reqs, users, bids, awarded] = await Promise.all([getData('Requirements'), getData('Users'), getData('Bids'), getData('AwardedContracts')]);
     document.getElementById('stats-active-tenders').textContent = (reqs || []).filter(r => r.Status === 'Active').length;
     document.getElementById('stats-registered-vendors').textContent = (users || []).filter(u => u.Role === 'Vendor').length;
@@ -405,7 +407,6 @@ document.getElementById('download-history-btn').addEventListener('click', () => 
 
 // --- USER FUNCTIONS ---
 function loadUserDashboard() { navigateTo('user-create-req-view'); }
-
 async function loadUserCreateReq() {
     const checklistDiv = document.getElementById('req-vendor-checklist');
     checklistDiv.innerHTML = '<p class="text-muted">Loading vendors...</p>';
@@ -468,7 +469,10 @@ function getBadgeColor(status) {
     const colors = { 'Awarded': 'primary', 'Accepted': 'success', 'Rejected': 'danger', 'Viewed': 'info', 'Active': 'success', 'Pending Approval': 'warning' };
     return colors[status] || 'secondary';
 }
-function downloadCSV(sheetName) { window.open(`${API_URL}?sheet=${sheetName}&format=csv`, '_blank'); }
+function downloadCSV(sheetName) {
+    let url = `${API_URL}?format=csv&sheet=${sheetName}`;
+    window.open(url, '_blank');
+}
 async function downloadAdvancedRequirementsReport() {
     showToast('Generating advanced report...');
     const [reqs, bids, users] = await Promise.all([getData('Requirements'), getData('Bids'), getData('Users')]);
