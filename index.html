@@ -70,7 +70,6 @@
                 </div>
             </div>
             <div id="main-view">
-                
                 <div id="admin-dashboard-view" class="view hidden">
                     <div class="row g-4 mb-4">
                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-primary" onclick="navigateTo('admin-requirements-view')"><div><h5 class="mb-0">Active Tenders</h5><p class="display-4" id="stats-active-tenders">--</p></div><i class="fas fa-file-alt stat-icon"></i></div></div>
@@ -79,11 +78,10 @@
                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-info" onclick="navigateTo('admin-awarded-view')"><div><h5 class="mb-0">Contracts Awarded</h5><p class="display-4" id="stats-awarded-contracts">--</p></div><i class="fas fa-trophy stat-icon"></i></div></div>
                     </div>
                     <div class="row g-4">
-                        <div class="col-md-7"><div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending Requisitions</h5></div><div id="admin-dashboard-reqs" class="list-group list-group-flush"></div></div></div>
-                        <div class="col-md-5"><div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Recent Bids</h5></div><div id="admin-dashboard-bids" class="list-group list-group-flush"></div></div></div>
+                        <div class="col-md-7"><div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending Requisitions</h5></div><div id="admin-dashboard-reqs" class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;"></div></div></div>
+                        <div class="col-md-5"><div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Recent Bids</h5></div><div id="admin-dashboard-bids" class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;"></div></div></div>
                     </div>
                 </div>
-
                 <div id="admin-requirements-view" class="view hidden">
                     <div class="card shadow-sm border-0"><div class="card-header bg-white d-flex justify-content-between align-items-center"><h5 class="mb-0">All Requirements</h5><button class="btn btn-sm btn-outline-primary" onclick="downloadAdvancedRequirementsReport()"><i class="fas fa-download me-2"></i>Download Advanced Report</button></div>
                         <div class="card-body">
@@ -93,7 +91,6 @@
                         </div>
                     </div>
                 </div>
-                
                 <div id="admin-awarded-view" class="view hidden">
                     <div class="card shadow-sm border-0"><div class="card-header bg-white d-flex justify-content-between align-items-center"><h5 class="mb-0">Awarded Contracts</h5><button class="btn btn-sm btn-outline-primary" onclick="downloadCSV('AwardedContracts')"><i class="fas fa-download me-2"></i>Download CSV</button></div>
                         <div class="card-body">
@@ -102,7 +99,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="admin-pending-reqs-view" class="view hidden">
                     <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending Requisition Approvals</h5></div>
                         <div class="card-body">
@@ -111,7 +107,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="admin-pending-users-view" class="view hidden">
                     <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending User Approvals</h5></div>
                         <div class="card-body">
@@ -120,7 +115,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="admin-reports-view" class="view hidden">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white"><h5 class="mb-0">Reports & Analytics</h5></div>
@@ -132,7 +126,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div id="vendor-dashboard-view" class="view hidden">
                      <div class="row g-4 mb-4">
                         <div class="col-md-4"><div class="stat-card bg-info"><div><h5 class="mb-0">Assigned Tenders</h5><p class="display-4" id="vendor-stats-assigned">--</p></div><i class="fas fa-file-signature stat-icon"></i></div></div>
@@ -148,7 +141,6 @@
                          </div>
                      </div>
                 </div>
-                
                 <div id="vendor-awarded-view" class="view hidden">
                      <div class="card shadow-sm border-0">
                          <div class="card-header bg-white"><h5 class="mb-0">My Awarded Contracts</h5></div>
@@ -158,14 +150,12 @@
                          </div>
                      </div>
                 </div>
-                
                 <div id="user-create-req-view" class="view hidden">
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-edit me-2"></i>Create a New Requisition</h5></div>
                         <div class="card-body"><form id="requisition-form"><div class="row"><div class="col-md-6 mb-3"><label for="req-product-name" class="form-label">Product Name</label><input type="text" id="req-product-name" class="form-control" required></div><div class="col-md-6 mb-3"><label for="req-quantity" class="form-label">Quantity</label><input type="number" id="req-quantity" class="form-control" required></div></div><div class="mb-3"><label for="req-description" class="form-label">Description</label><textarea id="req-description" class="form-control" rows="3"></textarea></div><div class="mb-3"><label for="req-image" class="form-label">Reference Image (Optional)</label><input type="file" id="req-image" class="form-control" accept="image/*"></div><h6 class="mt-4">Select Vendors to Notify</h6><div id="req-vendor-checklist" class="mb-3 border rounded p-3" style="max-height: 150px; overflow-y: auto;"><p class="text-muted">Loading vendors...</p></div><button type="submit" class="btn btn-primary w-100 fw-bold">Submit for Approval</button></form></div>
                     </div>
                 </div>
-
                 <div id="user-status-view" class="view hidden">
                     <div class="card shadow-sm border-0 h-100">
                         <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-history me-2"></i>My Requisition Status</h5></div>
@@ -180,7 +170,7 @@
     <div class="modal fade" id="registerModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title">Create Account</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="register-form"><div class="mb-2"><input type="text" id="reg-fullname" class="form-control" placeholder="Full Name" required></div><div class="mb-2"><input type="email" id="reg-email" class="form-control" placeholder="Email" required></div><div class="mb-2"><input type="password" id="reg-password" class="form-control" placeholder="Password" required></div><div class="mb-2"><input type="text" id="reg-company" class="form-control" placeholder="Company Name (for Vendors)"></div><div class="mb-3"><select id="reg-role" class="form-select" required><option value="">Register as...</option><option value="Vendor">Vendor</option><option value="User">User</option></select></div><button type="submit" class="btn btn-success w-100 fw-bold">Register</button></form></div></div></div></div>
     <div class="modal fade" id="bidModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="bidModalTitle">Place Bid</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="bid-form"><input type="hidden" id="bid-req-id"><div class="mb-3"><label for="bidAmount" class="form-label">Bid Amount (₹)</label><input type="number" class="form-control" id="bidAmount" required></div><div class="mb-3"><label for="bidComments" class="form-label">Comments</label><textarea class="form-control" id="bidComments" rows="3"></textarea></div><button type="submit" class="btn btn-primary w-100">Submit Bid</button></form></div></div></div></div>
     <div class="modal fade" id="adminActionModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="adminActionModalTitle">Requirement Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><ul class="nav nav-tabs" id="admin-modal-tabs"><li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#view-bids-pane">View Bids</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#assign-vendors-pane">Assign Vendors</button></li></ul><div class="tab-content"><div class="tab-pane fade show active p-3" id="view-bids-pane"><div id="bids-loader" class="text-center p-4"><div class="spinner-border text-success"></div></div><div class="table-responsive"><table class="table table-striped" id="bids-table" style="display:none;"><thead><tr><th>Rank</th><th>Vendor</th><th>Amount (₹)</th><th>Comments</th><th>Status</th><th>Action</th></tr></thead><tbody id="bids-tbody"></tbody></table></div></div><div class="tab-pane fade p-3" id="assign-vendors-pane"><div id="vendors-loader" class="text-center p-4"><div class="spinner-border text-info"></div></div><div id="vendor-list"></div><button class="btn btn-primary mt-3" id="save-assignments-btn">Save Assignments</button></div></div></div></div></div></div>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="script.js"></script>
 </body>
