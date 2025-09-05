@@ -187,7 +187,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwHUa20u2zupKRsSPJYWCTmU062ZDehRSpQtSvZXvVRxya436n85ZpXBv4RpYoGHznO/exec';
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwHUa20u2zupKRsSPJYWCTmU062ZDehRSpQtSvZXvVRxya436n85ZpXBv4RpYoGHznO/exec'; 
 
         // --- GLOBAL CACHE & STATE ---
         let APP_DATA = {};
@@ -220,9 +220,7 @@
         
         // --- DATA FETCHING (LAZY LOADING CACHE) ---
         async function getData(sheetName, forceRefresh = false) {
-            const loader = document.querySelector(`#${sheetName.toLowerCase()}-loader`) || {};
-            loader.style.display = 'block';
-            if (APP_DATA[sheetName] && !forceRefresh) { loader.style.display = 'none'; return APP_DATA[sheetName]; }
+            if (APP_DATA[sheetName] && !forceRefresh) return APP_DATA[sheetName];
             try {
                 const response = await fetch(`${API_URL}?sheet=${sheetName}`);
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
@@ -230,7 +228,6 @@
                 if (result.success) { APP_DATA[sheetName] = result.data; return result.data; }
                 return null;
             } catch (error) { console.error(`Failed to fetch ${sheetName}:`, error); return null; }
-            finally { loader.style.display = 'none'; }
         }
 
         async function postData(payload) {
@@ -249,6 +246,7 @@
                 const foundUser = users.find(user => user.Email === document.getElementById('email').value && user.Password === document.getElementById('password').value);
                 if (foundUser) {
                     sessionStorage.setItem('loggedInUser', JSON.stringify(foundUser));
+                    APP_DATA = {}; // Clear cache for new user
                     setupUIForRole(foundUser);
                 } else { loginError.textContent = 'Invalid email or password.'; }
             } else { loginError.textContent = 'Could not connect to server.'; }
@@ -430,7 +428,7 @@
         }
 
         async function awardContract(bid) {
-            if (!confirm(`Are you sure you want to award this contract to Vendor for ₹${bid.BidAmount}?`)) return;
+            if (!confirm(`Are you sure you want to award this contract for ₹${bid.BidAmount}?`)) return;
             const [requirements, users] = await Promise.all([getData('Requirements'), getData('Users')]);
             const requirement = requirements.find(r => r.RequirementID === bid.RequirementID);
             const vendor = users.find(u => u.UserID === bid.VendorID);
@@ -482,17 +480,20 @@
                 const myRankIndex = myLatestBid ? allBidsForThisReq.findIndex(b => b.BidID === myLatestBid.BidID) : -1;
                 const myRank = myRankIndex !== -1 ? `L${myRankIndex + 1}` : '-';
                 let bidStatus = myLatestBid ? `<span class="badge bg-${getBadgeColor(myLatestBid.BidStatus)}">${myLatestBid.BidStatus}</span>` : 'Not Submitted';
-                if (req.Status === 'Awarded' && !myBidsForThisReq.some(b => b.BidStatus === 'Awarded')) {
+                let l1BidInfo = '-';
+                if (req.Status === 'Awarded') {
                     const l1Rate = allBidsForThisReq[0] ? `₹${allBidsForThisReq[0].BidAmount}` : 'N/A';
-                    bidStatus = `<span class="badge bg-danger">Closed (L1: ${l1Rate})</span>`;
+                    if(!myBidsForThisReq.some(b => b.BidStatus === 'Awarded')) {
+                         bidStatus = `<span class="badge bg-danger">Closed</span>`;
+                    }
+                    l1BidInfo = l1Rate;
                 }
-
                 const imageUrlCell = req.ImageURL ? `<a href="${req.ImageURL}" target="_blank"><i class="fas fa-image"></i></a>` : '-';
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${imageUrlCell}</td><td>${req.Status}</td><td>${bidStatus}</td><td>${myRank}</td>`;
+                row.innerHTML = `<td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${imageUrlCell}</td><td>${req.Status}</td><td>${bidStatus}</td><td>${l1BidInfo}</td>`;
                 if(req.Status === 'Active') row.onclick = () => openBidModal(req);
                 tbody.appendChild(row);
-});
+            });
             table.style.display = 'table'; loader.style.display = 'none';
         }
         
@@ -584,8 +585,8 @@
                 const reader = new FileReader(); reader.readAsDataURL(imageFile);
                 const base64File = await new Promise((resolve) => { reader.onload = () => resolve(reader.result); });
                 const uploadResult = await postData({ action: 'uploadImage', data: { file: base64File, fileName: imageFile.name, mimeType: imageFile.type } });
-                if (uploadResult.success) { imageUrl = uploadResult.fileUrl; } 
-                else { alert('Image upload failed: ' + uploadResult.error); submitButton.disabled = false; submitButton.textContent = 'Submit for Approval'; return; }
+                if (uploadResult && uploadResult.success) { imageUrl = uploadResult.fileUrl; } 
+                else { alert('Image upload failed: ' + (uploadResult ? uploadResult.error : 'Unknown error')); submitButton.disabled = false; submitButton.textContent = 'Submit for Approval'; return; }
             }
             submitButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Saving Requisition...`;
             const currentUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
@@ -604,7 +605,18 @@
             const colors = { 'Awarded': 'primary', 'Accepted': 'success', 'Rejected': 'danger', 'Viewed': 'info', 'Active': 'success', 'Pending Approval': 'warning' };
             return colors[status] || 'secondary';
         }
-        function downloadCSV(sheetName) { window.open(`${API_URL}?sheet=${sheetName}&format=csv`, '_blank'); }
+        function downloadCSV(sheetName) {
+            const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+            let downloadUrl = `${API_URL}?format=csv&sheet=${sheetName}`;
+            if(sheetName === 'BidHistory') {
+                 downloadUrl += `&vendorId=${user.UserID}`;
+                 const startDate = document.getElementById('startDate').value;
+                 const endDate = document.getElementById('endDate').value;
+                 if (startDate) downloadUrl += `&startDate=${startDate}`;
+                 if (endDate) downloadUrl += `&endDate=${endDate}`;
+            }
+            window.open(downloadUrl, '_blank');
+        }
         async function downloadAdvancedRequirementsReport() {
             alert('Generating advanced report... This may take a moment.');
             const [reqs, bids, users] = await Promise.all([getData('Requirements'), getData('Bids'), getData('Users')]);
@@ -615,14 +627,9 @@
                     bidsForReq.forEach((bid, index) => {
                         const vendor = (users || []).find(u => u.UserID === bid.VendorID);
                         reportData.push({
-                            RequirementID: req.RequirementID,
-                            ProductName: req.ProductName,
-                            RequirementStatus: req.Status,
-                            BidRank: `L${index + 1}`,
-                            VendorName: vendor ? vendor.FullName : 'N/A',
-                            BidAmount_INR: bid.BidAmount,
-                            BidStatus: bid.BidStatus,
-                            BidDate: new Date(bid.SubmittedAt).toLocaleString()
+                            RequirementID: req.RequirementID, ProductName: req.ProductName, RequirementStatus: req.Status,
+                            BidRank: `L${index + 1}`, VendorName: vendor ? vendor.FullName : 'N/A',
+                            BidAmount_INR: bid.BidAmount, BidStatus: bid.BidStatus, BidDate: new Date(bid.SubmittedAt).toLocaleString()
                         });
                     });
                 } else {
