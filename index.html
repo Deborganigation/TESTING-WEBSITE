@@ -161,7 +161,7 @@
                 </div>
                 <div id="admin-pending-reqs-view" class="view hidden">
                     <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending Requisition Approvals</h5></div>
-                        <div class="card-body"><div class="table-responsive"><table class="table align-middle" id="admin-pending-reqs-table"><thead class="table-light"><tr><th>ID</th><th>Product</th><th>Created By</th><th>Date</th><th>Action</th></tr></thead><tbody id="admin-pending-reqs-tbody"></tbody></table></div></div>
+                        <div class="card-body"><div class="table-responsive"><table class="table align-middle" id="admin-pending-reqs-table"><thead class="table-light"><tr><th>ID</th><th>Product</th><th>Qty & Unit</th><th>Image</th><th>Created By</th><th>Date</th><th>Action</th></tr></thead><tbody id="admin-pending-reqs-tbody"></tbody></table></div></div>
                     </div>
                 </div>
                 <div id="admin-pending-users-view" class="view hidden">
@@ -244,7 +244,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
-        const API_URL = 'https://script.google.com/macros/s/AKfycbwWoJizLIiRDoJbhu891-KWdUBfJmCVL21R3ujktl67t0LZ0MN31xxUJ79nBBJKnJmnkw/exec'; 
+        // UPDATED: New deployment link
+        const API_URL = 'https://script.google.com/macros/s/AKfycbzanW-jxfH6B0h2NJQm32LMJFqIPeS8wXjJEER9_3FqLrYBAZxfmDNv7urhnExIr151JQ/exec'; 
 
         let APP_DATA = {};
         const navHistory = {
@@ -258,7 +259,6 @@
         let vendorAmountChart, reqStatusChart;
 
         window.onload = () => {
-            // Element Caching and Modal Initialization
             loginWrapper = document.getElementById('login-wrapper');
             appContainer = document.getElementById('app-container');
             loginForm = document.getElementById('login-form');
@@ -276,18 +276,18 @@
                 bulkUploadModal = new bootstrap.Modal('#bulkUploadModal');
             } catch (e) { console.error("Error initializing modals:", e); }
             
-            // Session Check
             if (sessionStorage.getItem('loggedInUser')) {
                 setupUIForRole(JSON.parse(sessionStorage.getItem('loggedInUser')));
             }
             
-            // Event Listeners
             loginForm.addEventListener('submit', handleLogin);
             document.getElementById('register-form').addEventListener('submit', handleRegistration);
             document.getElementById('reAwardForm').addEventListener('submit', handleReAwardSubmit);
             document.getElementById('bid-form').addEventListener('submit', handleBidSubmit);
             document.getElementById('requisition-form').addEventListener('submit', handleRequisitionSubmit);
             document.getElementById('process-upload-btn').addEventListener('click', processBulkUpload);
+            document.getElementById('report-start-date').addEventListener('change', loadAdminReports);
+            document.getElementById('report-end-date').addEventListener('change', loadAdminReports);
         };
         
         async function getData(sheetName, forceRefresh = false) {
@@ -500,13 +500,13 @@
 
         async function loadPendingRequisitions() {
              const tbody = document.getElementById('admin-pending-reqs-tbody');
-             tbody.innerHTML = `<tr><td colspan="5" class="text-center">Loading...</td></tr>`;
+             tbody.innerHTML = `<tr><td colspan="7" class="text-center">Loading...</td></tr>`;
              const [reqs, users] = await Promise.all([getData('Requirements'), getData('Users')]);
              const pendingReqs = (reqs || []).filter(r => r.Status === 'Pending Approval');
-             tbody.innerHTML = pendingReqs.length > 0 ? '' : '<tr><td colspan="5" class="text-center">No pending requisitions.</td></tr>';
+             tbody.innerHTML = pendingReqs.length > 0 ? '' : '<tr><td colspan="7" class="text-center">No pending requisitions.</td></tr>';
              pendingReqs.forEach(req => {
                  const creatorName = (users || []).find(u => u.UserID === req.CreatedBy)?.FullName || 'N/A';
-                 tbody.innerHTML += `<tr><td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${creatorName}</td><td>${new Date(req.CreatedAt).toLocaleDateString()}</td><td><button class="btn btn-sm btn-success" onclick="approveRequisition('${req.RequirementID}')">Approve</button></td></tr>`;
+                 tbody.innerHTML += `<tr><td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${req.Quantity} ${req.Unit || ''}</td><td>${req.ImageURL ? `<a href="${req.ImageURL}" target="_blank"><i class="fas fa-image fa-lg text-primary"></i></a>` : '-'}</td><td>${creatorName}</td><td>${new Date(req.CreatedAt).toLocaleDateString()}</td><td><button class="btn btn-sm btn-success" onclick="approveRequisition('${req.RequirementID}')">Approve</button></td></tr>`;
              });
         }
         
@@ -539,7 +539,11 @@
             const endDate = document.getElementById('report-end-date').value;
             let filteredBids = bids || [];
             if (startDate) filteredBids = filteredBids.filter(b => new Date(b.SubmittedAt) >= new Date(startDate));
-            if (endDate) filteredBids = filteredBids.filter(b => new Date(b.SubmittedAt) <= new Date(endDate));
+            if (endDate) filteredBids = filteredBids.filter(b => {
+                const endDateObj = new Date(endDate);
+                endDateObj.setHours(23, 59, 59, 999); // Include the whole end day
+                return new Date(b.SubmittedAt) <= endDateObj;
+            });
 
             if (!filteredBids || filteredBids.length === 0) {
                 tableContainer.innerHTML = `<p class="text-muted" id="reports-summary-placeholder">No data available for the selected period.</p>`;
