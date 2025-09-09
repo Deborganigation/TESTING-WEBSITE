@@ -35,7 +35,6 @@
         #login-video-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: -1; filter: brightness(0.4); }
         #login-container { width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border-radius: 1rem; }
         
-        /* Style for the password eye icon */
         .password-container { position: relative; }
         .password-container .toggle-password { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); cursor: pointer; color: #6c757d; }
 
@@ -56,6 +55,11 @@
         .nav-tabs .nav-link.active { background-color: var(--primary-color); color: white; }
         .table-hover tbody tr:hover { cursor: pointer; background-color: #e9ecef; }
         .instruction-box { background-color: #e9ecef; border-left: 5px solid var(--primary-color); }
+        .requisition-item-card { position: relative; border: 1px solid #dee2e6; border-radius: .5rem; padding: 1.25rem; margin-bottom: 1rem; background-color: #fff; }
+        .remove-item-btn { position: absolute; top: 10px; right: 10px; }
+        .kpi-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); text-align: center; }
+        .kpi-card h6 { color: #6c757d; margin-bottom: 8px; }
+        .kpi-card p { font-size: 2rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0; }
     </style>
 </head>
 <body>
@@ -91,7 +95,7 @@
                 <a class="nav-link admin-nav-item" data-view="admin-history-view" onclick="navigateTo(this.dataset.view)"><i class="fas fa-history"></i> Awarded History</a>
                 <a class="nav-link admin-nav-item" data-view="admin-pending-reqs-view" onclick="navigateTo(this.dataset.view)"><i class="fas fa-inbox"></i> Requisition Approvals</a>
                 <a class="nav-link admin-nav-item" data-view="admin-pending-users-view" onclick="navigateTo(this.dataset.view)"><i class="fas fa-user-check"></i> User Approvals</a>
-                <a class="nav-link admin-nav-item" data-view="admin-reports-view" onclick="navigateTo(this.dataset.view)"><i class="fas fa-chart-pie"></i> Reports</a>
+                <a class="nav-link admin-nav-item" data-view="admin-reports-view" onclick="navigateTo(this.dataset.view)"><i class="fas fa-chart-pie"></i> Reports & Analytics</a>
                 
                 <a class="nav-link vendor-nav-item" data-view="vendor-dashboard-view" onclick="navigateTo(this.dataset.view)"><i class="fas fa-clipboard-list"></i> My Requirements</a>
                 <a class="nav-link vendor-nav-item" data-view="vendor-awarded-view" onclick="navigateTo(this.dataset.view)"><i class="fas fa-trophy"></i> My Awarded Contracts</a>
@@ -121,37 +125,41 @@
             <div id="main-view">
                 <div id="admin-dashboard-view" class="view hidden">
                      <div class="row g-4 mb-4">
-                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-primary" onclick="navigateTo('admin-requirements-view')"><div><h5 class="mb-0">Active Tenders</h5><p class="display-4" id="stats-active-tenders">--</p></div><i class="fas fa-file-alt stat-icon"></i></div></div>
-                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-success" onclick="navigateTo('admin-pending-users-view')"><div><h5 class="mb-0">Pending Approvals</h5><p class="display-4" id="stats-pending-users">--</p></div><i class="fas fa-user-check stat-icon"></i></div></div>
-                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-warning" onclick="navigateTo('admin-requirements-view')"><div><h5 class="mb-0">Pending Bids</h5><p class="display-4" id="stats-pending-bids">--</p></div><i class="fas fa-hourglass-half stat-icon"></i></div></div>
-                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-info" onclick="navigateTo('admin-awarded-view')"><div><h5 class="mb-0">Contracts Awarded</h5><p class="display-4" id="stats-awarded-contracts">--</p></div><i class="fas fa-trophy stat-icon"></i></div></div>
+                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-primary" onclick="navigateTo('admin-requirements-view')"><div><h5 class="mb-0">Active Items</h5><p class="display-4" id="stats-active-tenders">--</p></div><i class="fas fa-file-alt stat-icon"></i></div></div>
+                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-success" onclick="navigateTo('admin-pending-users-view')"><div><h5 class="mb-0">Pending Users</h5><p class="display-4" id="stats-pending-users">--</p></div><i class="fas fa-user-check stat-icon"></i></div></div>
+                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-warning" onclick="navigateTo('admin-requirements-view')"><div><h5 class="mb-0">Submitted Bids</h5><p class="display-4" id="stats-pending-bids">--</p></div><i class="fas fa-hourglass-half stat-icon"></i></div></div>
+                         <div class="col-lg-3 col-md-6"><div class="stat-card bg-info" onclick="navigateTo('admin-awarded-view')"><div><h5 class="mb-0">Items Awarded</h5><p class="display-4" id="stats-awarded-contracts">--</p></div><i class="fas fa-trophy stat-icon"></i></div></div>
                     </div>
                     <div class="row g-4">
-                         <div class="col-md-7"><div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending Requisitions</h5></div><div id="admin-dashboard-reqs" class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;"></div></div></div>
-                         <div class="col-md-5"><div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Recent Bids</h5></div><div id="admin-dashboard-bids" class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;"></div></div></div>
+                         <div class="col-md-7"><div class="card shadow-sm border-0"><div class="card-header bg-white d-flex justify-content-between align-items-center"><h5 class="mb-0">Pending Requisitions</h5><a href="#" class="small" onclick="navigateTo('admin-pending-reqs-view')">View All</a></div><div id="admin-dashboard-reqs" class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;"></div></div></div>
+                         <div class="col-md-5"><div class="card shadow-sm border-0"><div class="card-header bg-white d-flex justify-content-between align-items-center"><h5 class="mb-0">Recent Bids</h5><a href="#" class="small" onclick="navigateTo('admin-requirements-view')">View All</a></div><div id="admin-dashboard-bids" class="list-group list-group-flush" style="max-height: 350px; overflow-y: auto;"></div></div></div>
                     </div>
                 </div>
                 <div id="admin-requirements-view" class="view hidden">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                            <h5 class="mb-0">All Requirements</h5>
+                            <h5 class="mb-0">All Requirement Items</h5>
                             <div>
-                                <button class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#bulkUploadModal"><i class="fas fa-upload me-2"></i>Bulk Upload</button>
-                                <button class="btn btn-sm btn-outline-primary" onclick="downloadAdvancedRequirementsReport()"><i class="fas fa-download me-2"></i>Download Report</button>
+                                <button class="btn btn-sm btn-success" onclick="downloadAllRequirementsReport()"><i class="fas fa-download me-2"></i>Download Report</button>
+                                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#bulkUploadModal"><i class="fas fa-upload me-2"></i>Bulk Upload</button>
                             </div>
                         </div>
                         <div class="card-body">
-                            <div class="table-responsive"><table class="table table-hover align-middle" id="admin-req-table"><thead class="table-light"><tr><th>ID</th><th>Product</th><th>Qty & Unit</th><th>Image</th><th>Status</th><th>L1 Vendor</th><th>L1 Rate (₹)</th></tr></thead><tbody id="admin-req-tbody"></tbody></table></div>
+                            <div class="table-responsive"><table class="table table-hover align-middle" id="admin-req-table"><thead class="table-light"><tr><th>Req ID</th><th>Product</th><th>Qty & Unit</th><th>Images</th><th>Freight</th><th>Status</th><th>L1 Vendor</th><th>L1 Rate (₹)</th></tr></thead><tbody id="admin-req-tbody"></tbody></table></div>
                         </div>
                     </div>
                 </div>
                  <div id="admin-awarded-view" class="view hidden">
-                    <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Awarded Contracts</h5></div>
-                        <div class="card-body">
-                            <div class="table-responsive"><table class="table align-middle" id="admin-awarded-table"><thead class="table-light"><tr><th>Req. ID</th><th>Product</th><th>Vendor</th><th>Amount (₹)</th><th>Awarded Date</th><th>Remarks</th><th>Actions</th></tr></thead><tbody id="admin-awarded-tbody"></tbody></table></div>
-                        </div>
-                    </div>
-                </div>
+                     <div class="card shadow-sm border-0">
+                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                             <h5 class="mb-0">Awarded Contracts</h5>
+                             <button class="btn btn-sm btn-success" onclick="downloadAwardedContractsReport()"><i class="fas fa-download me-2"></i>Download Report</button>
+                         </div>
+                         <div class="card-body">
+                             <div class="table-responsive"><table class="table align-middle" id="admin-awarded-table"><thead class="table-light"><tr><th>Req. ID</th><th>Product</th><th>Vendor</th><th>Amount (₹)</th><th>Awarded Date</th><th>Remarks</th><th>Actions</th></tr></thead><tbody id="admin-awarded-tbody"></tbody></table></div>
+                         </div>
+                     </div>
+                 </div>
                 <div id="admin-history-view" class="view hidden">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-white d-flex justify-content-between align-items-center">
@@ -169,33 +177,57 @@
                     </div>
                 </div>
                 <div id="admin-pending-reqs-view" class="view hidden">
-                    <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending Requisition Approvals</h5></div>
-                        <div class="card-body"><div class="table-responsive"><table class="table align-middle" id="admin-pending-reqs-table"><thead class="table-light"><tr><th>ID</th><th>Product</th><th>Qty & Unit</th><th>Image</th><th>Created By</th><th>Date</th><th>Action</th></tr></thead><tbody id="admin-pending-reqs-tbody"></tbody></table></div></div>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Pending Requisition Item Approvals</h5>
+                             <button class="btn btn-sm btn-success" onclick="downloadPendingReqsReport()"><i class="fas fa-download me-2"></i>Download Report</button>
+                        </div>
+                        <div class="card-body"><div class="table-responsive"><table class="table align-middle" id="admin-pending-reqs-table"><thead class="table-light"><tr><th>Req ID</th><th>Product</th><th>Qty & Unit</th><th>Images</th><th>Freight</th><th>Created By</th><th>Date</th><th>Action</th></tr></thead><tbody id="admin-pending-reqs-tbody"></tbody></table></div></div>
                     </div>
                 </div>
                 <div id="admin-pending-users-view" class="view hidden">
-                    <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">Pending User Approvals</h5></div>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">Pending User Approvals</h5>
+                            <button class="btn btn-sm btn-success" onclick="downloadPendingUsersReport()"><i class="fas fa-download me-2"></i>Download Report</button>
+                        </div>
                         <div class="card-body"><div class="table-responsive"><table class="table align-middle" id="admin-pending-users-table"><thead class="table-light"><tr><th>Name</th><th>Email</th><th>Role</th><th>Company</th><th>Action</th></tr></thead><tbody id="admin-pending-users-tbody"></tbody></table></div></div>
                     </div>
                 </div>
                 <div id="admin-reports-view" class="view hidden">
                      <div class="card shadow-sm border-0">
-                        <div class="card-header bg-white"><h5 class="mb-0">Reports & Analytics</h5></div>
-                        <div class="card-body">
-                            <div class="card mb-4">
-                                <div class="card-body row g-3 align-items-end">
-                                    <div class="col-md-5"><label class="form-label form-label-sm">Start Date</label><input type="date" id="report-start-date" class="form-control form-control-sm"></div>
-                                    <div class="col-md-5"><label class="form-label form-label-sm">End Date</label><input type="date" id="report-end-date" class="form-control form-control-sm"></div>
-                                    <div class="col-md-2"><button class="btn btn-primary w-100" onclick="loadAdminReports()"><i class="fas fa-filter"></i></button></div>
-                                </div>
-                            </div>
-                            <div class="row g-4">
-                                <div class="col-md-6"><div class="card"><div class="card-header">Total Bid Amount per Vendor</div><div class="card-body" style="height: 300px; position: relative;"><canvas id="vendorAmountChart"></canvas></div></div></div>
-                                <div class="col-md-6"><div class="card"><div class="card-header">Requirement Status Overview</div><div class="card-body" style="height: 300px; position: relative;"><canvas id="reqStatusChart"></canvas></div></div></div>
-                                <div class="col-12"><div class="card"><div class="card-header"><span>Bidding Summary</span></div><div class="card-body" id="reports-summary-table-container"><p class="text-muted" id="reports-summary-placeholder">Apply filters to view summary.</p></div></div></div>
-                            </div>
-                        </div>
-                    </div>
+                         <div class="card-header bg-white">
+                             <h5 class="mb-0">Reports & Analytics</h5>
+                         </div>
+                         <div class="card-body">
+                             <div class="row g-3 align-items-center p-3 bg-light border rounded mb-4">
+                                 <div class="col-md-5"><label class="form-label form-label-sm">Start Date</label><input type="date" id="report-start-date" class="form-control form-control-sm"></div>
+                                 <div class="col-md-5"><label class="form-label form-label-sm">End Date</label><input type="date" id="report-end-date" class="form-control form-control-sm"></div>
+                                 <div class="col-md-2 d-grid"><button id="report-apply-filter" class="btn btn-primary btn-sm">Apply</button></div>
+                             </div>
+                             <div class="row g-4 mb-4">
+                                 <div class="col-lg-3 col-md-6"><div class="kpi-card"><h6 class="text-uppercase">Total Spend</h6><p id="report-total-spend">₹0</p></div></div>
+                                 <div class="col-lg-3 col-md-6"><div class="kpi-card"><h6 class="text-uppercase">Awarded Items</h6><p id="report-awarded-items">0</p></div></div>
+                                 <div class="col-lg-3 col-md-6"><div class="kpi-card"><h6 class="text-uppercase">Top Vendor</h6><p id="report-top-vendor" style="font-size: 1.5rem;">-</p></div></div>
+                                 <div class="col-lg-3 col-md-6"><div class="kpi-card"><h6 class="text-uppercase">Active Items</h6><p id="report-active-items">0</p></div></div>
+                             </div>
+                             <div class="row g-4">
+                                 <div class="col-lg-7"><div class="card h-100"><div class="card-header">Spend by Vendor</div><div class="card-body"><canvas id="vendorSpendChart"></canvas></div></div></div>
+                                 <div class="col-lg-5"><div class="card h-100"><div class="card-header">Item Status Overview</div><div class="card-body"><canvas id="itemStatusChart"></canvas></div></div></div>
+                             </div>
+                             <div class="mt-4">
+                                 <div class="card">
+                                     <div class="card-header">Detailed Awarded Data</div>
+                                     <div class="table-responsive" style="max-height: 400px;">
+                                         <table class="table table-striped table-sm" id="report-details-table">
+                                             <thead class="table-light"><tr><th>Req. ID</th><th>Product</th><th>Vendor</th><th>Amount (₹)</th><th>Awarded Date</th></tr></thead>
+                                             <tbody id="report-details-tbody"></tbody>
+                                         </table>
+                                     </div>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
                 </div>
                 <div id="vendor-dashboard-view" class="view hidden">
                     <div class="p-3 bg-light border rounded mb-4">
@@ -207,11 +239,11 @@
                         </div>
                     </div>
                     <div class="row g-4 mb-4">
-                        <div class="col-md-4"><div class="stat-card bg-info" onclick="navigateTo('vendor-dashboard-view')"><div><h5 class="mb-0">Assigned Tenders</h5><p class="display-4" id="vendor-stats-assigned">--</p></div><i class="fas fa-file-signature stat-icon"></i></div></div>
+                        <div class="col-md-4"><div class="stat-card bg-info" onclick="navigateTo('vendor-dashboard-view')"><div><h5 class="mb-0">Assigned Items</h5><p class="display-4" id="vendor-stats-assigned">--</p></div><i class="fas fa-file-signature stat-icon"></i></div></div>
                         <div class="col-md-4"><div class="stat-card bg-secondary" onclick="navigateTo('vendor-dashboard-view')"><div><h5 class="mb-0">Bids Submitted</h5><p class="display-4" id="vendor-stats-submitted">--</p></div><i class="fas fa-gavel stat-icon"></i></div></div>
                         <div class="col-md-4"><div class="stat-card bg-success" onclick="navigateTo('vendor-awarded-view')"><div><h5 class="mb-0">Contracts Won</h5><p class="display-4" id="vendor-stats-won">--</p></div><i class="fas fa-trophy stat-icon"></i></div></div>
                     </div>
-                    <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">My Assigned Requirements</h5></div><div class="card-body"><div class="table-responsive"><table class="table table-hover align-middle" id="vendor-req-table"><thead class="table-light"><tr><th>ID</th><th>Product</th><th>Qty & Unit</th><th>Image</th><th>My Bid</th><th>My Rank</th><th>L1 Rate</th><th>Action</th></tr></thead><tbody id="vendor-req-tbody"></tbody></table></div></div></div>
+                    <div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">My Assigned Requirement Items</h5></div><div class="card-body"><div class="table-responsive"><table class="table table-hover align-middle" id="vendor-req-table"><thead class="table-light"><tr><th>Req ID</th><th>Product</th><th>Qty & Unit</th><th>Images</th><th>Freight</th><th>My Bid Status</th><th>My Rank</th><th>Action</th></tr></thead><tbody id="vendor-req-tbody"></tbody></table></div></div></div>
                     <div class="mt-4 p-3 instruction-box rounded"><div class="d-flex justify-content-between align-items-center"><h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Instructions</h5><select id="lang-selector" class="form-select form-select-sm w-auto" onchange="changeInstructionLanguage(this.value)"><option value="en">English</option><option value="hi">Hindi</option><option value="bn">Bengali</option></select></div><div id="instruction-content" class="mt-3"></div></div>
                 </div>
                 <div id="vendor-awarded-view" class="view hidden"><div class="card shadow-sm border-0"><div class="card-header bg-white"><h5 class="mb-0">My Awarded Contracts</h5></div><div class="card-body"><div class="table-responsive"><table class="table align-middle" id="vendor-awarded-table"><thead class="table-light"><tr><th>Contract ID</th><th>Product</th><th>My Amount (₹)</th><th>Awarded Date</th></tr></thead><tbody id="vendor-awarded-tbody"></tbody></table></div></div></div></div>
@@ -220,32 +252,46 @@
                         <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-edit me-2"></i>Create a New Requisition</h5></div>
                         <div class="card-body">
                             <form id="requisition-form">
-                                <div class="row">
-                                    <div class="col-md-6 mb-3"><label class="form-label">Product Name</label><input type="text" id="req-product-name" class="form-control" required></div>
-                                    <div class="col-md-3 mb-3"><label class="form-label">Quantity</label><input type="number" id="req-quantity" class="form-control" required></div>
-                                    <div class="col-md-3 mb-3"><label class="form-label">Unit</label><select id="req-unit" class="form-select" required><option value="Pcs">Pcs</option><option value="Kg">Kg</option><option value="Ltr">Ltr</option><option value="Box">Box</option><option value="Set">Set</option><option value="Mtr">Mtr</option></select></div>
+                                <div id="requisition-items-container">
+                                    </div>
+                                <button type="button" class="btn btn-outline-secondary w-100 mb-3" onclick="addRequisitionItem()"><i class="fas fa-plus me-2"></i>Add another item</button>
+                                
+                                <div class="card p-3 mb-3">
+                                    <h6 class="mt-2">Select Vendors to Notify</h6>
+                                    <small class="d-block text-muted mb-2">Vendors selected here will be notified for all items in this requisition.</small>
+                                    <div id="req-vendor-checklist" class="border rounded p-3" style="max-height: 150px; overflow-y: auto;"></div>
                                 </div>
-                                <div class="mb-3"><label class="form-label">Description</label><textarea id="req-description" class="form-control" rows="3"></textarea></div>
-                                <div class="mb-3"><label class="form-label">Reference Image (Optional)</label><input type="file" id="req-image" class="form-control" accept="image/*"></div>
-                                <h6 class="mt-4">Select Vendors to Notify</h6>
-                                <div id="req-vendor-checklist" class="mb-3 border rounded p-3" style="max-height: 150px; overflow-y: auto;"></div>
-                                <button type="submit" class="btn btn-primary w-100 fw-bold">Submit for Approval</button>
+                                
+                                <button type="submit" class="btn btn-primary w-100 fw-bold">Submit Requisition for Approval</button>
                             </form>
                         </div>
                     </div>
                     <div class="mt-4 p-3 instruction-box rounded" id="user-form-instruction-box"></div>
                 </div>
-                <div id="user-status-view" class="view hidden"><div class="card shadow-sm border-0 h-100"><div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-history me-2"></i>My Requisition Status</h5></div><div id="user-req-status-list" class="list-group list-group-flush"></div></div><div class="mt-4 p-3 instruction-box rounded" id="user-status-instruction-box"></div></div>
+                <div id="user-status-view" class="view hidden">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-white"><h5 class="mb-0"><i class="fas fa-history me-2"></i>My Requisition Status</h5></div>
+                        <div class="card-body">
+                            <div class="row g-3 align-items-center p-3 bg-light border rounded mb-4">
+                                <div class="col-md-4"><label class="form-label form-label-sm">Start Date</label><input type="date" id="user-req-start-date" class="form-control form-control-sm"></div>
+                                <div class="col-md-4"><label class="form-label form-label-sm">End Date</label><input type="date" id="user-req-end-date" class="form-control form-control-sm"></div>
+                                <div class="col-md-4 d-grid"><button class="btn btn-success btn-sm" onclick="downloadUserRequisitionHistory()"><i class="fas fa-download me-2"></i> Download Report</button></div>
+                            </div>
+                            <div id="user-req-status-list"></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 instruction-box rounded" id="user-status-instruction-box"></div>
+                </div>
             </div>
         </main>
     </div>
 
     <div class="modal fade" id="registerModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title">Create Account</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="register-form"><div class="mb-2"><input type="text" id="reg-fullname" class="form-control" placeholder="Full Name" required></div><div class="mb-2"><input type="email" id="reg-email" class="form-control" placeholder="Email" required></div><div class="mb-2"><input type="password" id="reg-password" class="form-control" placeholder="Password" required></div><div class="mb-2"><input type="text" id="reg-company" class="form-control" placeholder="Company Name (for Vendors)"></div><div class="mb-3"><select id="reg-role" class="form-select" required><option value="">Register as...</option><option value="Vendor">Vendor</option><option value="User">User</option></select></div><button type="submit" class="btn btn-success w-100 fw-bold">Register</button></form></div></div></div></div>
-    <div class="modal fade" id="bidModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="bidModalTitle">Place Bid</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="bid-form"><input type="hidden" id="bid-req-id"><div class="mb-3"><label class="form-label">Bid Amount (₹)</label><input type="number" class="form-control" id="bidAmount" required></div><div class="mb-3"><label class="form-label">Comments</label><textarea class="form-control" id="bidComments" rows="3"></textarea></div><button type="submit" class="btn btn-primary w-100">Submit Bid</button></form></div></div></div></div>
-    <div class="modal fade" id="adminActionModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="adminActionModalTitle">Requirement Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="req-image-preview" class="text-center my-3"></div><ul class="nav nav-tabs" id="admin-modal-tabs"><li class="nav-item"><button class="nav-link active" id="view-bids-tab" data-bs-toggle="tab" data-bs-target="#view-bids-pane">View Bids</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#assign-vendors-pane">Assign Vendors</button></li></ul><div class="tab-content"><div class="tab-pane fade show active p-3" id="view-bids-pane"><div class="table-responsive"><table class="table table-striped" id="bids-table"><thead><tr><th>Rank</th><th>Vendor</th><th>Amount (₹)</th><th>Comments</th><th>Status</th><th>Action</th></tr></thead><tbody id="bids-tbody"></tbody></table></div></div><div class="tab-pane fade p-3" id="assign-vendors-pane"><div id="vendor-list"></div><button class="btn btn-primary mt-3" id="save-assignments-btn">Save Assignments</button></div></div></div></div></div></div>
+    <div class="modal fade" id="bidModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="bidModalTitle">Place Bid</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><form id="bid-form"><input type="hidden" id="bid-item-id"><div class="alert alert-info" id="bid-freight-status"></div><div class="row"><div class="col-md-6 mb-3"><label class="form-label">Ex-works Rate (₹ per unit)</label><input type="number" class="form-control" id="bidExWorksRate" step="0.01" required></div><div class="col-md-6 mb-3"><label class="form-label">Freight Rate (₹ per unit)</label><input type="number" class="form-control" id="bidFreightRate" step="0.01" required></div></div><div class="mb-3"><label class="form-label">Total Calculated Amount (₹)</label><input type="text" class="form-control" id="bidTotalAmount" readonly></div><div class="mb-3"><label class="form-label">Comments</label><textarea class="form-control" id="bidComments" rows="2"></textarea></div><button type="submit" class="btn btn-primary w-100">Submit Bid</button></form></div></div></div></div>
+    <div class="modal fade" id="adminActionModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content"><div class="modal-header bg-primary text-white"><h5 class="modal-title" id="adminActionModalTitle">Item Details</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><div id="req-image-preview" class="text-center my-3"></div><ul class="nav nav-tabs" id="admin-modal-tabs"><li class="nav-item"><button class="nav-link active" id="view-bids-tab" data-bs-toggle="tab" data-bs-target="#view-bids-pane">View Bids</button></li><li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#assign-vendors-pane">Assign Vendors</button></li></ul><div class="tab-content"><div class="tab-pane fade show active p-3" id="view-bids-pane"><div class="table-responsive"><table class="table table-striped" id="bids-table"><thead><tr><th>Rank</th><th>Vendor</th><th>Ex-works (₹)</th><th>Freight (₹)</th><th>Total Amount (₹)</th><th>Comments</th><th>Status</th><th>Action</th></tr></thead><tbody id="bids-tbody"></tbody></table></div></div><div class="tab-pane fade p-3" id="assign-vendors-pane"><p>Vendor assignments apply to the entire requisition (<strong id="assign-req-id"></strong>).</p><div id="vendor-list"></div><button class="btn btn-primary mt-3" id="save-assignments-btn">Save Assignments</button></div></div></div></div></div>
     <div class="modal fade" id="historyDetailModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title" id="historyDetailModalTitle">Bidding History</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><div class="table-responsive"><table class="table" id="history-detail-table"><thead><tr><th>Rank</th><th>Vendor</th><th>Amount (₹)</th><th>Comments</th></tr></thead><tbody id="history-detail-tbody"></tbody></table></div></div></div></div></div>
     <div class="modal fade" id="reAwardModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-warning"><h5 class="modal-title">Re-Award Contract</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>You are about to re-award the contract to a new vendor. Please provide a mandatory reason below.</p><form id="reAwardForm"><input type="hidden" id="reAwardBidId"><div class="mb-3"><label for="reAwardRemarks" class="form-label"><strong>Reason for Re-Award (Mandatory)</strong></label><textarea class="form-control" id="reAwardRemarks" rows="3" required></textarea></div><button type="submit" class="btn btn-warning w-100">Confirm Re-Award</button></form></div></div></div></div>
-    <div class="modal fade" id="bulkUploadModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Bulk Upload Requirements</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Upload a CSV or Excel file with columns: `ProductName`, `Quantity`, `Unit`, `Description`.</p><input type="file" id="bulkUploadInput" class="form-control" accept=".csv, .xlsx"><div id="upload-status" class="mt-2 small"></div></div><div class="modal-footer"><button class="btn btn-primary" id="process-upload-btn">Upload</button></div></div></div></div>
+    <div class="modal fade" id="bulkUploadModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Bulk Upload Requirements</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"> <p>Please upload an Excel file (.xlsx) with the required columns. <a href="#" onclick="downloadBulkTemplate()">Download Template</a></p><hr> <form id="bulk-upload-form"> <div class="mb-3"> <label for="bulk-upload-file" class="form-label">Select Excel File</label> <input class="form-control" type="file" id="bulk-upload-file" accept=".xlsx, .xls" required> </div> <div class="mb-3"> <label class="form-label">Select Vendors to Notify</label> <div id="bulk-vendor-checklist" class="border rounded p-3" style="max-height: 150px; overflow-y: auto;"></div> </div> <button type="submit" class="btn btn-success w-100">Upload and Submit</button> </form> </div></div></div></div>
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -253,8 +299,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     
     <script>
-        // YOUR MAIN APP URL
-        const API_URL = 'https://script.google.com/macros/s/AKfycbzanW-jxfH6B0h2NJQm32LMJFqIPeS8wXjJEER9_3FqLrYBAZxfmDNv7urhnExIr151JQ/exec'; 
+        // ❗ API URL - UPDATED WITH YOUR NEW DEPLOYMENT URL
+        const API_URL = 'https://script.google.com/macros/s/AKfycbwitvl9lvJ4m8_0vYJtnUPHT5eK54mnKW80E52et4JomLZDi03GSCHj-uli1P-c88LzKg/exec'; 
         
         // EMAIL SERVICE URL
         const EMAIL_API_URL = 'https://script.google.com/macros/s/AKfycbwjsozf5wgAPTyaeYA-giquXDZ8Flzn1hdoSpIswqhu1BeQ-TDU1vjjKzQGCv3mJZFu/exec';
@@ -268,7 +314,7 @@
         };
         let loginWrapper, appContainer, loginForm, loginError, mainView, headerTitle, navLinksContainer;
         let registerModal, bidModal, adminActionModal, historyDetailModal, reAwardModal, bulkUploadModal;
-        let vendorAmountChart, reqStatusChart;
+        let vendorSpendChart, itemStatusChart;
 
         window.onload = () => {
             loginWrapper = document.getElementById('login-wrapper');
@@ -297,11 +343,10 @@
             document.getElementById('reAwardForm').addEventListener('submit', handleReAwardSubmit);
             document.getElementById('bid-form').addEventListener('submit', handleBidSubmit);
             document.getElementById('requisition-form').addEventListener('submit', handleRequisitionSubmit);
-            document.getElementById('process-upload-btn').addEventListener('click', processBulkUpload);
-            document.getElementById('report-start-date').addEventListener('change', loadAdminReports);
-            document.getElementById('report-end-date').addEventListener('change', loadAdminReports);
+            document.getElementById('bulk-upload-form').addEventListener('submit', handleBulkUpload);
+            document.querySelector('#bulkUploadModal').addEventListener('shown.bs.modal', loadVendorsForBulkUpload);
+
             
-            // JAVASCRIPT FOR PASSWORD EYE ICON
             const togglePassword = document.getElementById('togglePassword');
             const passwordInput = document.getElementById('password');
             if (togglePassword && passwordInput) {
@@ -321,10 +366,10 @@
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
                 if (result.success) { APP_DATA[sheetName] = result.data; return result.data; }
-                return null;
+                throw new Error(result.error || `Failed to parse data for ${sheetName}`);
             } catch (error) { 
                 console.error(`Failed to fetch ${sheetName}:`, error);
-                showToast(`Failed to load ${sheetName} data.`, 'error');
+                showToast(`Failed to load ${sheetName} data. Check console for details.`, 'error');
                 return null; 
             } finally { hideLoader(); }
         }
@@ -340,19 +385,14 @@
                 return jsonResponse;
             } catch (error) { 
                 console.error('POST Error:', error);
-                showToast(error.message, 'error');
+                showToast(`Operation Failed: ${error.message}`, 'error');
                 return { success: false, error: error.message }; 
             } finally { hideLoader(); }
         }
 
         async function postEmailData(payload) {
             try {
-                await fetch(EMAIL_API_URL, { 
-                    method: 'POST', 
-                    body: JSON.stringify(payload), 
-                    headers: {'Content-Type': 'text/plain;charset=utf-8'}, 
-                    redirect: 'follow' 
-                });
+                await fetch(EMAIL_API_URL, { method: 'POST', body: JSON.stringify(payload), headers: {'Content-Type': 'text/plain;charset=utf-8'}, redirect: 'follow' });
                 showToast('Notification email sent successfully!', 'info');
             } catch (error) { 
                 console.error('Email POST Error:', error);
@@ -365,7 +405,6 @@
             loginError.textContent = 'Authenticating...';
             const users = await getData('Users', true);
             if (!users) { loginError.textContent = 'Could not connect to server.'; return; }
-            
             const emailInput = document.getElementById('email').value.toLowerCase();
             const passwordInput = document.getElementById('password').value;
             const foundUser = users.find(user => user.Email.toLowerCase() === emailInput && user.Password.toString() === passwordInput.toString());
@@ -437,50 +476,56 @@
         function getDefaultViewForRole(role) { return { 'Admin': 'admin-dashboard-view', 'Vendor': 'vendor-dashboard-view', 'User': 'user-create-req-view' }[role]; }
 
         async function loadAdminDashboard() {
-            const [reqs, pendingUsers, bids, users] = await Promise.all([getData('Requirements', true), getData('PendingUsers', true), getData('Bids', true), getData('Users', true)]);
-            const awardedContracts = await getData('AwardedContracts');
+            const [reqItems, pendingUsers, bids, awarded, allUsers] = await Promise.all([getData('AllRequirementsView', true), getData('PendingUsers', true), getData('Bids', true), getData('AwardedContracts', true), getData('Users')]);
             
-            const oldPendingCount = sessionStorage.getItem('pendingReqCount') || 0;
-            const newPendingCount = (reqs || []).filter(r => r.Status === 'Pending Approval').length;
-            if (newPendingCount > oldPendingCount) {
-                showToast(`You have ${newPendingCount - oldPendingCount} new pending requisitions.`, 'info');
-            }
-            sessionStorage.setItem('pendingReqCount', newPendingCount);
-
-            document.getElementById('stats-active-tenders').textContent = (reqs || []).filter(r => r.Status === 'Active').length;
+            document.getElementById('stats-active-tenders').textContent = (reqItems || []).filter(r => r.Status === 'Active').length;
             document.getElementById('stats-pending-users').textContent = (pendingUsers || []).length;
             document.getElementById('stats-pending-bids').textContent = (bids || []).filter(b => b.BidStatus === 'Submitted').length;
-            document.getElementById('stats-awarded-contracts').textContent = (awardedContracts || []).length;
-            
-            const pendingReqs = (reqs || []).filter(r => r.Status === 'Pending Approval').slice(0, 5);
-            const pendingReqsDiv = document.getElementById('admin-dashboard-reqs');
-            pendingReqsDiv.innerHTML = pendingReqs.length > 0 ? '' : '<div class="list-group-item text-center text-muted p-4">No pending requisitions.</div>';
-            pendingReqs.forEach(req => {
-                const creatorName = (users || []).find(u => u.UserID === req.CreatedBy)?.FullName || 'N/A';
-                pendingReqsDiv.innerHTML += `<a href="#" onclick="navigateTo('admin-pending-reqs-view')" class="list-group-item list-group-item-action clickable">${req.ProductName}<small class="d-block text-muted">by ${creatorName}</small></a>`;
-            });
+            document.getElementById('stats-awarded-contracts').textContent = (awarded || []).length;
 
-            const recentBids = (bids || []).filter(b => b.BidStatus === 'Submitted').sort((a,b) => new Date(b.SubmittedAt) - new Date(a.SubmittedAt)).slice(0, 5);
-            const recentBidsDiv = document.getElementById('admin-dashboard-bids');
-            recentBidsDiv.innerHTML = recentBids.length > 0 ? '' : '<div class="list-group-item text-center text-muted p-4">No recent bids.</div>';
+            const reqsContainer = document.getElementById('admin-dashboard-reqs');
+            const pendingReqs = (reqItems || []).filter(r => r.Status === 'Pending Approval').slice(0, 5);
+            reqsContainer.innerHTML = pendingReqs.length > 0 ? '' : '<div class="list-group-item">No pending requisitions.</div>';
+            pendingReqs.forEach(req => {
+                const creator = (allUsers || []).find(u => u.UserID === req.CreatedBy)?.FullName || 'N/A';
+                reqsContainer.innerHTML += `<a href="#" onclick="navigateTo('admin-pending-reqs-view')" class="list-group-item list-group-item-action"><div class="d-flex w-100 justify-content-between"><h6 class="mb-1">${req.ProductName}</h6><small>${new Date(req.CreatedAt).toLocaleDateString()}</small></div><p class="mb-1 small">Req ID: ${req.RequisitionID.split('-')[1]}-${req.ItemSLNo} | By: ${creator}</p></a>`;
+            });
+            
+            const bidsContainer = document.getElementById('admin-dashboard-bids');
+            const recentBids = (bids || []).sort((a,b) => new Date(b.SubmittedAt) - new Date(a.SubmittedAt)).slice(0, 5);
+            bidsContainer.innerHTML = recentBids.length > 0 ? '' : '<div class="list-group-item">No recent bids.</div>';
             recentBids.forEach(bid => {
-                const vendorName = (users || []).find(u => u.UserID === bid.VendorID)?.FullName || 'N/A';
-                recentBidsDiv.innerHTML += `<div class="list-group-item">${vendorName}<small class="d-block text-muted">bid ₹${bid.BidAmount} on ${bid.RequirementID}</small></div>`;
+                const vendor = (allUsers || []).find(u => u.UserID === bid.VendorID)?.FullName || 'N/A';
+                const item = (reqItems || []).find(i => i.ItemID === bid.ItemID);
+                bidsContainer.innerHTML += `<a href="#" onclick="openAdminActionModalByItemId('${bid.ItemID}')" class="list-group-item list-group-item-action"><div class="d-flex w-100 justify-content-between"><h6 class="mb-1">${item?.ProductName || 'Item'}</h6><small>${formatCurrency(bid.BidAmount)}</small></div><p class="mb-1 small">By: ${vendor} on ${new Date(bid.SubmittedAt).toLocaleDateString()}</p></a>`;
             });
         }
         
         async function loadAdminRequirements() {
             const tbody = document.getElementById('admin-req-tbody');
-            tbody.innerHTML = `<tr><td colspan="7" class="text-center">Loading...</td></tr>`;
-            const [reqs, bids, users] = await Promise.all([getData('Requirements'), getData('Bids'), getData('Users')]);
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center">Loading...</td></tr>`;
+            const [reqItems, bids, users] = await Promise.all([getData('AllRequirementsView', true), getData('Bids', true), getData('Users', true)]);
             tbody.innerHTML = '';
-            (reqs || []).filter(r => r.Status !== 'Awarded').forEach(req => {
-                const bidsForThisReq = (bids || []).filter(b => b.RequirementID === req.RequirementID).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
-                const l1Bid = bidsForThisReq[0];
+            const activeItems = (reqItems || []).filter(item => item.Status === 'Active');
+             if(activeItems.length === 0) {
+                 tbody.innerHTML = `<tr><td colspan="8" class="text-center">No active requirements found.</td></tr>`;
+                 return;
+            }
+            activeItems.forEach(item => {
+                const bidsForItem = (bids || []).filter(b => b.ItemID === item.ItemID).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
+                const l1Bid = bidsForItem[0];
                 const l1Vendor = l1Bid ? (users || []).find(u => u.UserID === l1Bid.VendorID) : null;
                 const row = document.createElement('tr');
-                row.innerHTML = `<td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${req.Quantity} ${req.Unit || ''}</td><td>${req.ImageURL ? `<a href="${req.ImageURL}" target="_blank" onclick="event.stopPropagation()"><i class="fas fa-image fa-lg text-primary"></i></a>` : '-'}</td><td><span class="badge bg-${getBadgeColor(req.Status)}">${req.Status}</span></td><td>${l1Vendor ? l1Vendor.FullName : 'No Bids'}</td><td>${l1Bid ? `₹${l1Bid.BidAmount}` : '-'}</td>`;
-                row.onclick = () => openAdminActionModal(req.RequirementID);
+
+                const imageLinks = [item.DrawingURL, item.SpecimenURL].filter(Boolean).map((url, index) => 
+                    `<a href="${url}" target="_blank" onclick="event.stopPropagation()" title="${index === 0 ? 'Drawing' : 'Specimen'}"><i class="fas ${index === 0 ? 'fa-ruler-combined' : 'fa-image'} fa-lg text-primary me-2"></i></a>`
+                ).join('') || '-';
+
+                const freightIcon = item.FreightRequired ? `<i class="fas fa-truck text-success" title="Freight Included"></i>` : `<i class="fas fa-truck text-muted" title="No Freight"></i>`;
+                const reqIdDisplay = `${item.RequisitionID.split('-')[1]}-${item.ItemSLNo}`;
+
+                row.innerHTML = `<td>${reqIdDisplay}</td><td>${item.ProductName}</td><td>${item.Quantity} ${item.Unit || ''}</td><td>${imageLinks}</td><td>${freightIcon}</td><td><span class="badge bg-${getBadgeColor(item.Status)}">${item.Status}</span></td><td>${l1Vendor ? l1Vendor.FullName : 'No Bids'}</td><td>${l1Bid ? formatCurrency(l1Bid.BidAmount) : '-'}</td>`;
+                row.onclick = () => openAdminActionModal(item);
                 tbody.appendChild(row);
             });
         }
@@ -488,333 +533,428 @@
         async function loadAdminAwardedContracts() {
             const tbody = document.getElementById('admin-awarded-tbody');
             tbody.innerHTML = `<tr><td colspan="7" class="text-center">Loading...</td></tr>`;
-            const awarded = await getData('AwardedContracts');
+            const awarded = await getData('AwardedContracts', true);
             tbody.innerHTML = (awarded || []).length === 0 ? '<tr><td colspan="7" class="text-center">No contracts awarded yet.</td></tr>' : '';
             (awarded || []).forEach(c => { 
-                const reAwardButton = `<button class="btn btn-sm btn-warning" onclick="openAdminActionModal('${c.RequirementID}')">Re-Award / View</button>`;
-                tbody.innerHTML += `<tr><td>${c.RequirementID}</td><td>${c.ProductName}</td><td>${c.VendorName}</td><td>₹${c.AwardedAmount}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td><td>${c.Remarks || '-'}</td><td>${reAwardButton}</td></tr>`; 
+                const actionButton = `<button class="btn btn-sm btn-info" onclick="openAdminActionModalByItemId('${c.ItemID}')">View Details</button>`;
+                tbody.innerHTML += `<tr><td>${c.RequisitionID.split('-')[1]}</td><td>${c.ProductName}</td><td>${c.VendorName}</td><td>${formatCurrency(c.AwardedAmount)}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td><td>${c.Remarks || '-'}</td><td>${actionButton}</td></tr>`; 
             });
         }
         
         async function loadAdminHistory() {
             const tbody = document.getElementById('admin-history-tbody');
             tbody.innerHTML = `<tr><td colspan="6" class="text-center">Loading history...</td></tr>`;
-            const [awarded, users] = await Promise.all([getData('AwardedContracts'), getData('Users')]);
+            await Promise.all([getData('AwardedContracts', true), getData('Bids', true)]);
             
-            const applyFiltersAndRender = () => {
-                let data = awarded || [];
+            const filterAndRender = () => {
+                const awarded = APP_DATA.AwardedContracts || [];
+                
                 const startDate = document.getElementById('history-start-date').value;
                 const endDate = document.getElementById('history-end-date').value;
-                const searchTerm = document.getElementById('history-search-input').value.toLowerCase();
+                const searchId = document.getElementById('history-search-input').value.toLowerCase();
+                
+                const filtered = awarded.filter(c => {
+                    const awardDate = new Date(c.AwardedDate);
+                    const isDateInRange = (!startDate || awardDate >= new Date(startDate)) && (!endDate || awardDate <= new Date(endDate));
+                    const matchesSearch = !searchId || c.RequisitionID.toLowerCase().includes(searchId);
+                    return isDateInRange && matchesSearch;
+                });
 
-                if (startDate) data = data.filter(c => new Date(c.AwardedDate) >= new Date(startDate));
-                if (endDate) data = data.filter(c => new Date(c.AwardedDate) <= new Date(endDate));
-                if (searchTerm) data = data.filter(c => c.RequirementID.toLowerCase().includes(searchTerm));
-
-                tbody.innerHTML = data.length === 0 ? `<tr><td colspan="6" class="text-center">No history found for the selected criteria.</td></tr>` : '';
-                data.forEach(c => {
-                    const vendorName = (users || []).find(u => u.UserID === c.VendorID)?.FullName || c.VendorName;
-                    tbody.innerHTML += `<tr><td>${c.RequirementID}</td><td>${c.ProductName}</td><td>${vendorName}</td><td>₹${c.AwardedAmount}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td><td><button class="btn btn-sm btn-info" onclick="openHistoryDetailModal('${c.RequirementID}')">View Ranks</button></td></tr>`;
+                tbody.innerHTML = filtered.length === 0 ? '<tr><td colspan="6" class="text-center">No records match your criteria.</td></tr>' : '';
+                filtered.forEach(c => {
+                    const reqIdDisplay = `${c.RequisitionID.split('-')[1]}`;
+                    const actionButton = `<button class="btn btn-sm btn-outline-primary" onclick="showHistoryDetailModal('${c.ItemID}')">View Bids</button>`;
+                    tbody.innerHTML += `<tr><td>${reqIdDisplay}</td><td>${c.ProductName}</td><td>${c.VendorName}</td><td>${formatCurrency(c.AwardedAmount)}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td><td>${actionButton}</td></tr>`;
                 });
             };
-            applyFiltersAndRender();
-            document.getElementById('history-start-date').onchange = applyFiltersAndRender;
-            document.getElementById('history-end-date').onchange = applyFiltersAndRender;
-            document.getElementById('history-search-input').onkeyup = applyFiltersAndRender;
+
+            document.getElementById('history-start-date').onchange = filterAndRender;
+            document.getElementById('history-end-date').onchange = filterAndRender;
+            document.getElementById('history-search-input').oninput = filterAndRender;
+            filterAndRender(); 
         }
         
-        async function openHistoryDetailModal(reqId) {
-            document.getElementById('historyDetailModalTitle').textContent = `Bidding History for ${reqId}`;
-            const tbody = document.getElementById('history-detail-tbody');
-            tbody.innerHTML = `<tr><td colspan="4" class="text-center">Loading ranks...</td></tr>`;
-            historyDetailModal.show();
-            const [bids, users] = await Promise.all([getData('Bids'), getData('Users')]);
-            const bidsForReq = (bids || []).filter(b => b.RequirementID === reqId).sort((a, b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
-            tbody.innerHTML = '';
-            bidsForReq.forEach((bid, index) => {
-                const vendorName = (users || []).find(u => u.UserID === bid.VendorID)?.FullName || 'N/A';
-                tbody.innerHTML += `<tr><td><span class="badge bg-info">L${index + 1}</span></td><td>${vendorName}</td><td>₹${bid.BidAmount}</td><td>${bid.Comments || '-'}</td></tr>`;
-            });
-        }
-
         async function loadPendingRequisitions() {
              const tbody = document.getElementById('admin-pending-reqs-tbody');
-             tbody.innerHTML = `<tr><td colspan="7" class="text-center">Loading...</td></tr>`;
-             const [reqs, users] = await Promise.all([getData('Requirements'), getData('Users')]);
-             const pendingReqs = (reqs || []).filter(r => r.Status === 'Pending Approval');
-             tbody.innerHTML = pendingReqs.length > 0 ? '' : '<tr><td colspan="7" class="text-center">No pending requisitions.</td></tr>';
-             pendingReqs.forEach(req => {
-                 const creatorName = (users || []).find(u => u.UserID === req.CreatedBy)?.FullName || 'N/A';
-                 tbody.innerHTML += `<tr><td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${req.Quantity} ${req.Unit || ''}</td><td>${req.ImageURL ? `<a href="${req.ImageURL}" target="_blank"><i class="fas fa-image fa-lg text-primary"></i></a>` : '-'}</td><td>${creatorName}</td><td>${new Date(req.CreatedAt).toLocaleDateString()}</td><td><button class="btn btn-sm btn-success" onclick="approveRequisition('${req.RequirementID}')">Approve</button></td></tr>`;
-             });
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center">Loading...</td></tr>`;
+                const [reqItems, users] = await Promise.all([getData('AllRequirementsView', true), getData('Users', true)]);
+                const pendingItems = (reqItems || []).filter(r => r.Status === 'Pending Approval');
+                tbody.innerHTML = pendingItems.length > 0 ? '' : '<tr><td colspan="8" class="text-center">No pending requisitions.</td></tr>';
+                pendingItems.forEach(item => {
+                      const creatorName = (users || []).find(u => u.UserID === item.CreatedBy)?.FullName || 'N/A';
+                      const imageLinks = [item.DrawingURL, item.SpecimenURL].filter(Boolean).map((url, index) => `<a href="${url}" target="_blank" title="${index === 0 ? 'Drawing' : 'Specimen'}"><i class="fas ${index === 0 ? 'fa-ruler-combined' : 'fa-image'} fa-lg text-primary me-2"></i></a>`).join('') || '-';
+                      const freightIcon = item.FreightRequired ? `<i class="fas fa-truck text-success" title="Freight Included"></i>` : `<i class="fas fa-truck text-muted" title="No Freight"></i>`;
+                      const reqIdDisplay = `${item.RequisitionID.split('-')[1]}-${item.ItemSLNo}`;
+                      tbody.innerHTML += `<tr><td>${reqIdDisplay}</td><td>${item.ProductName}</td><td>${item.Quantity} ${item.Unit || ''}</td><td>${imageLinks}</td><td>${freightIcon}</td><td>${creatorName}</td><td>${new Date(item.CreatedAt).toLocaleDateString()}</td><td><button class="btn btn-sm btn-success" onclick="approveItem('${item.ItemID}', '${item.RequisitionID}')">Approve</button></td></tr>`;
+                });
         }
         
-        async function approveRequisition(reqId) {
-            if(await postData({ action: 'updateRecord', data: { sheetName: 'Requirements', id: reqId, record: { Status: 'Active' } } })) { showToast('Requisition Approved!'); await getData('Requirements', true); loadPendingRequisitions(); }
+        async function approveItem(itemId, reqId) {
+            const result = await postData({ action: 'updateRecord', data: { sheetName: 'RequisitionItems', id: itemId, primaryKeyHeader: 'ItemID', record: { Status: 'Active' } } });
+            if (result.success) {
+                await postData({ action: 'updateRecord', data: { sheetName: 'Requisitions', id: reqId, primaryKeyHeader: 'RequisitionID', record: { Status: 'Active' } } });
+                showToast('Item Approved!'); 
+                handleManualRefresh();
+            }
         }
 
         async function loadPendingUsers() {
             const tbody = document.getElementById('admin-pending-users-tbody');
             tbody.innerHTML = `<tr><td colspan="5" class="text-center">Loading...</td></tr>`;
-            const pendingUsers = await getData('PendingUsers');
+            const pendingUsers = await getData('PendingUsers', true);
             tbody.innerHTML = (pendingUsers || []).length > 0 ? '' : '<tr><td colspan="5" class="text-center">No pending approvals.</td></tr>';
             (pendingUsers || []).forEach(user => { tbody.innerHTML += `<tr><td>${user.FullName}</td><td>${user.Email}</td><td>${user.Role}</td><td>${user.CompanyName}</td><td><button class="btn btn-sm btn-success" onclick="approveUser('${user.TempID}')">Approve</button></td></tr>`; });
         }
         
         async function approveUser(tempId) {
             const result = await postData({ action: 'approveUser', data: { TempID: tempId } });
-            if (result.success) { showToast(result.message); await Promise.all([getData('PendingUsers', true), getData('Users', true)]); loadPendingUsers(); } 
+            if (result.success) { showToast(result.message); handleManualRefresh(); } 
         }
 
-        async function loadAdminReports() {
-            const placeholder = document.getElementById('reports-summary-placeholder');
-            const tableContainer = document.getElementById('reports-summary-table-container');
-            placeholder.textContent = "Applying filters and loading report data...";
-            if (window.vendorAmountChart) window.vendorAmountChart.destroy();
-            if (window.reqStatusChart) window.reqStatusChart.destroy();
-            let [bids, users, reqs] = await Promise.all([getData('Bids'), getData('Users'), getData('Requirements')]);
-
-            const startDate = document.getElementById('report-start-date').value;
-            const endDate = document.getElementById('report-end-date').value;
-            let filteredBids = bids || [];
-            if (startDate) filteredBids = filteredBids.filter(b => new Date(b.SubmittedAt) >= new Date(startDate));
-            if (endDate) filteredBids = filteredBids.filter(b => {
-                const endDateObj = new Date(endDate);
-                endDateObj.setHours(23, 59, 59, 999);
-                return new Date(b.SubmittedAt) <= endDateObj;
-            });
-
-            if (!bids || !users || !reqs || filteredBids.length === 0) {
-                tableContainer.innerHTML = `<p class="text-muted" id="reports-summary-placeholder">No data available for the selected period.</p>`;
-                if (document.getElementById('vendorAmountChart').getContext('2d')) document.getElementById('vendorAmountChart').getContext('2d').clearRect(0, 0, 300, 150);
-                if (document.getElementById('reqStatusChart').getContext('2d')) document.getElementById('reqStatusChart').getContext('2d').clearRect(0, 0, 300, 150);
-                return;
-            }
-            
-            const vendorAmounts = filteredBids.reduce((acc, bid) => {
-                const vendorName = (users || []).find(u => u.UserID === bid.VendorID)?.FullName || bid.VendorID;
-                acc[vendorName] = (acc[vendorName] || 0) + parseFloat(bid.BidAmount);
-                return acc;
-            }, {});
-            window.vendorAmountChart = new Chart(document.getElementById('vendorAmountChart').getContext('2d'), { type: 'bar', data: { labels: Object.keys(vendorAmounts), datasets: [{ label: 'Total Bid Amount (₹)', data: Object.values(vendorAmounts), backgroundColor: '#198754'}] }, options: { indexAxis: 'y' } });
-
-            const statusCounts = (reqs || []).reduce((acc, req) => { acc[req.Status] = (acc[req.Status] || 0) + 1; return acc; }, {});
-            window.reqStatusChart = new Chart(document.getElementById('reqStatusChart').getContext('2d'), { type: 'pie', data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#0d6efd', '#ffc107', '#198754', '#6c757d', '#dc3545'] }] } });
-        
-            let summaryHTML = `<div class="table-responsive" style="max-height: 250px;"><table class="table table-sm table-striped"><thead><tr><th>Req ID</th><th>Product</th><th>Vendor</th><th>Bid Amount (₹)</th><th>Date</th></tr></thead><tbody>`;
-            filteredBids.forEach(bid => {
-                const vendorName = (users || []).find(u => u.UserID === bid.VendorID)?.FullName || bid.VendorID;
-                const productName = (reqs || []).find(r => r.RequirementID === bid.RequirementID)?.ProductName || 'N/A';
-                summaryHTML += `<tr><td>${bid.RequirementID}</td><td>${productName}</td><td>${vendorName}</td><td>${bid.BidAmount}</td><td>${new Date(bid.SubmittedAt).toLocaleDateString()}</td></tr>`;
-            });
-            summaryHTML += `</tbody></table></div>`;
-            tableContainer.innerHTML = summaryHTML;
+        async function openAdminActionModalByItemId(itemId) {
+            const allItems = await getData('AllRequirementsView', true);
+            const item = allItems.find(i => i.ItemID === itemId);
+            if (item) openAdminActionModal(item);
         }
-        
-        async function openAdminActionModal(reqId) {
+
+        async function openAdminActionModal(item) {
+            const modal = document.querySelector('#adminActionModal');
+            modal.dataset.itemId = item.ItemID;
+            modal.dataset.reqId = item.RequisitionID;
             adminActionModal.show();
-            document.getElementById('adminActionModalTitle').textContent = `Details for ${reqId}`;
-            const reqs = await getData('Requirements');
-            const awarded = await getData('AwardedContracts');
-            const currentReq = (reqs || []).find(r => r.RequirementID === reqId) || (awarded || []).find(c => c.RequirementID === reqId);
-            document.getElementById('req-image-preview').innerHTML = currentReq?.ImageURL ? `<p class="mb-2"><strong>Reference Image:</strong></p><a href="${currentReq.ImageURL}" target="_blank"><img src="${currentReq.ImageURL}" alt="Image" style="max-width: 100%; max-height: 250px; border-radius: 8px;"></a><hr>` : '';
+            document.getElementById('adminActionModalTitle').textContent = `Details for Item: ${item.ProductName} (Req: ${item.RequisitionID.split('-')[1]})`;
+            
+            let imagesHTML = '';
+            if (item.DrawingURL) imagesHTML += `<div class="text-center d-inline-block mx-2"><p class="mb-1 small"><strong>Drawing Image</strong></p><a href="${item.DrawingURL}" target="_blank"><img src="${item.DrawingURL}" alt="Drawing" style="max-width: 100%; max-height: 150px; border-radius: 8px;"></a></div>`;
+            if (item.SpecimenURL) imagesHTML += `<div class="text-center d-inline-block mx-2"><p class="mb-1 small"><strong>Specimen Image</strong></p><a href="${item.SpecimenURL}" target="_blank"><img src="${item.SpecimenURL}" alt="Specimen" style="max-width: 100%; max-height: 150px; border-radius: 8px;"></a></div>`;
+            document.getElementById('req-image-preview').innerHTML = imagesHTML ? imagesHTML + '<hr>' : '';
+
             document.getElementById('view-bids-tab').click();
-            const finalReq = (reqs || []).find(r => r.RequirementID === reqId);
-            loadBidsForAdmin(reqId, finalReq?.Status || 'Awarded');
-            loadVendorsForAssignment(reqId);
+            loadBidsForAdmin(item);
+            loadVendorsForAssignment(item.RequisitionID);
         }
 
-        async function loadBidsForAdmin(reqId, reqStatus) {
+        async function loadBidsForAdmin(item) {
             const bidsTbody = document.getElementById('bids-tbody');
-            bidsTbody.innerHTML = `<tr><td colspan="6" class="text-center">Loading Bids...</td></tr>`;
-            const [allBids, allUsers] = await Promise.all([getData('Bids'), getData('Users')]);
+            bidsTbody.innerHTML = `<tr><td colspan="8" class="text-center">Loading Bids...</td></tr>`;
+            const [allBids, allUsers] = await Promise.all([getData('Bids', true), getData('Users', true)]);
             
-            const relevantBids = (allBids || []).filter(bid => bid.RequirementID === reqId).sort((a, b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
-            bidsTbody.innerHTML = relevantBids.length > 0 ? '' : '<tr><td colspan="6" class="text-center">No bids submitted yet.</td></tr>';
+            const relevantBids = (allBids || []).filter(bid => bid.ItemID === item.ItemID).sort((a, b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
+            bidsTbody.innerHTML = relevantBids.length > 0 ? '' : '<tr><td colspan="8" class="text-center">No bids submitted yet.</td></tr>';
             
+            let awardedActionAdded = false;
             relevantBids.forEach((bid, index) => {
                 const vendorName = (allUsers || []).find(u => u.UserID === bid.VendorID)?.FullName || bid.VendorID;
-                let actionButton = `<button class="btn btn-sm btn-success" onclick='awardContract(${JSON.stringify(bid)})'>Award</button>`;
-                if (bid.BidStatus === 'Awarded') actionButton = `<button class="btn btn-sm btn-success" disabled>Awarded</button>`;
-                else if (reqStatus === 'Awarded') actionButton = `<button class="btn btn-sm btn-warning" onclick='openReAwardModal(${JSON.stringify(bid)})'>Re-Award</button>`;
-                bidsTbody.innerHTML += `<tr><td><span class="badge bg-info">L${index + 1}</span></td><td>${vendorName}</td><td>₹${bid.BidAmount}</td><td>${bid.Comments || '-'}</td><td><span class="badge bg-${getBadgeColor(bid.BidStatus)}">${bid.BidStatus}</span></td><td>${actionButton}</td></tr>`;
+                let actionButton = `<button class="btn btn-sm btn-success" onclick='awardContract(this, ${JSON.stringify(bid)}, "${item.ProductName}")'>Award</button>`;
+                
+                if (bid.BidStatus === 'Awarded') {
+                    actionButton = `<button class="btn btn-sm btn-success" disabled>Awarded</button>`;
+                    if (!awardedActionAdded) {
+                        actionButton += `<button class="btn btn-sm btn-danger ms-2" onclick='reopenBidding(this, "${item.ItemID}")'>Re-open Bidding</button>`;
+                        awardedActionAdded = true;
+                    }
+                } else if (item.Status === 'Awarded') {
+                    actionButton = `<button class="btn btn-sm btn-warning" onclick='openReAwardModal(${JSON.stringify(bid)}, "${item.ProductName}")'>Re-Award</button>`;
+                }
+                
+                bidsTbody.innerHTML += `<tr><td><span class="badge bg-info">L${index + 1}</span></td><td>${vendorName}</td><td>${formatCurrency(bid.ExWorksRate)}</td><td>${formatCurrency(bid.FreightRate)}</td><td><strong>${formatCurrency(bid.BidAmount)}</strong></td><td>${bid.Comments || '-'}</td><td><span class="badge bg-${getBadgeColor(bid.BidStatus)}">${bid.BidStatus}</span></td><td>${actionButton}</td></tr>`;
             });
         }
         
         async function loadVendorsForAssignment(reqId) {
+            document.getElementById('assign-req-id').textContent = reqId.split('-')[1];
             const vendorListDiv = document.getElementById('vendor-list');
             vendorListDiv.innerHTML = `<div class="text-center p-4"><div class="spinner-border text-info"></div></div>`;
-            const [assignments, users] = await Promise.all([getData('RequirementAssignments'), getData('Users')]);
+            const [assignments, users] = await Promise.all([getData('RequisitionAssignments', true), getData('Users', true)]);
             const vendors = (users || []).filter(u => u.Role === 'Vendor');
-            const assignedVendorIds = (assignments || []).filter(a => a.RequirementID === reqId).map(a => a.VendorID);
+            const assignedVendorIds = (assignments || []).filter(a => a.RequisitionID === reqId).map(a => a.VendorID);
             
-            const selectAllHTML = `<div class="form-check fw-bold border-bottom pb-2 mb-2"><input class="form-check-input" type="checkbox" id="vendor-assign-select-all"><label class="form-check-label" for="vendor-assign-select-all">Select All Vendors</label></div>`;
-            vendorListDiv.innerHTML = selectAllHTML + vendors.map(v => `<div class="form-check"><input class="form-check-input vendor-assign-checkbox" type="checkbox" value="${v.UserID}" id="v-assign-${v.UserID}" ${assignedVendorIds.includes(v.UserID) ? 'checked' : ''}><label class="form-check-label" for="v-assign-${v.UserID}">${v.FullName}</label></div>`).join('');
+            const selectAllHTML = `<div class="form-check fw-bold border-bottom pb-2 mb-2"><input class="form-check-input" type="checkbox" id="vendor-assign-select-all"><label class="form-check-label" for="vendor-assign-select-all">Select All</label></div>`;
+            vendorListDiv.innerHTML = selectAllHTML + vendors.map(v => `<div class="form-check"><input class="form-check-input vendor-assign-checkbox" type="checkbox" value="${v.UserID}" id="v-assign-${v.UserID}" ${assignedVendorIds.includes(v.UserID) ? 'checked' : ''}><label class="form-check-label" for="v-assign-${v.UserID}">${v.FullName} (${v.CompanyName})</label></div>`).join('');
             document.getElementById('vendor-assign-select-all').addEventListener('change', (e) => { document.querySelectorAll('.vendor-assign-checkbox').forEach(checkbox => checkbox.checked = e.target.checked); });
         }
         
         document.getElementById('save-assignments-btn').addEventListener('click', async () => {
             const reqId = document.querySelector('#adminActionModal').dataset.reqId;
-            const selectedVendorIds = Array.from(document.querySelectorAll('#vendor-list input:checked')).map(input => input.value);
-            const result = await postData({ action: 'assignVendors', data: { RequirementID: reqId, vendorIds: selectedVendorIds } });
+            const selectedVendorIds = Array.from(document.querySelectorAll('#vendor-list .vendor-assign-checkbox:checked')).map(input => input.value);
+            const result = await postData({ action: 'assignVendors', data: { RequisitionID: reqId, vendorIds: selectedVendorIds } });
             if (result.success) { showToast('Assignments saved!'); }
         });
         
-        async function awardContract(bid, remarks = '') {
-            if (!remarks && !confirm(`Are you sure you want to award this contract for ₹${bid.BidAmount}?`)) return;
-            const requirement = (APP_DATA.Requirements || []).find(r => r.RequirementID === bid.RequirementID);
+        async function awardContract(btn, bid, productName, remarks = '') {
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Awarding...`;
+            
+            if (!remarks && !confirm(`Award this contract for ${formatCurrency(bid.BidAmount)}?`)) {
+                btn.disabled = false;
+                btn.textContent = 'Award';
+                return;
+            }
             const vendor = (APP_DATA.Users || []).find(u => u.UserID === bid.VendorID);
             
-            const result = await postData({ action: 'awardContract', data: { bid, productName: requirement.ProductName, vendorName: vendor.FullName, remarks } });
+            const result = await postData({ action: 'awardContract', data: { bid, productName: productName, vendorName: vendor.FullName, remarks } });
             
             if(result.success) {
-                showToast('Contract awarded successfully! Sending notification...', 'success');
-
-                await postEmailData({
-                    data: {
-                        recipientEmail: vendor.Email,
-                        vendorName: vendor.FullName,
-                        productName: requirement.ProductName,
-                        requirementId: bid.RequirementID,
-                        awardedAmount: bid.BidAmount
-                    }
-                });
-
-                await Promise.all([getData('Requirements', true), getData('Bids', true), getData('AwardedContracts', true)]);
+                showToast('Contract awarded successfully! Refreshing data...', 'success');
+                await postEmailData({ data: { recipientEmail: vendor.Email, vendorName: vendor.FullName, productName: productName, requirementId: bid.ItemID, awardedAmount: bid.BidAmount } });
                 adminActionModal.hide();
                 reAwardModal.hide();
-                navigateTo('admin-requirements-view');
+                handleManualRefresh();
+            } else {
+                 btn.disabled = false;
+                 btn.textContent = 'Award';
             }
         }
         
-        function openReAwardModal(bid) {
-            document.getElementById('reAwardBidId').value = JSON.stringify(bid);
-            document.getElementById('reAwardForm').reset();
+        function openReAwardModal(bid, productName) {
+            document.getElementById('reAwardBidId').value = JSON.stringify({bid, productName});
             reAwardModal.show();
         }
 
         async function handleReAwardSubmit(e) {
             e.preventDefault();
             const remarks = document.getElementById('reAwardRemarks').value;
-            if (!remarks) { showToast('Remarks are mandatory for re-awarding.', 'error'); return; }
-            if (!confirm(`Are you sure you want to re-award this contract?`)) return;
-
-            const newWinningBid = JSON.parse(document.getElementById('reAwardBidId').value);
-            const reqId = newWinningBid.RequirementID;
-            
-            const oldAwardedContract = (APP_DATA.AwardedContracts || []).find(c => c.RequirementID === reqId && !c.Remarks?.includes('Superseded'));
-            const oldWinningBid = (APP_DATA.Bids || []).find(b => b.RequirementID === reqId && b.BidStatus === 'Awarded');
-            
-            showToast("Superseding old contract...");
-            const updatePromises = [];
-            if (oldAwardedContract) {
-                const oldContractRemark = `Superseded. Re-awarded on ${new Date().toLocaleDateString()}. Reason: ${remarks}`;
-                updatePromises.push(postData({ action: 'updateRecord', data: { sheetName: 'AwardedContracts', id: oldAwardedContract.ContractID, record: { Remarks: oldContractRemark } } }));
+            if (!remarks.trim()) {
+                showToast('Reason for re-award is mandatory.', 'error');
+                return;
             }
-            if (oldWinningBid) updatePromises.push(postData({ action: 'updateRecord', data: { sheetName: 'Bids', id: oldWinningBid.BidID, record: { BidStatus: 'Superseded' } } }));
-            await Promise.all(updatePromises);
-
-            showToast("Awarding new contract...");
-            const newRemark = `Re-Awarded. Original award was superseded. Reason: ${remarks}`;
-            
-            await awardContract(newWinningBid, newRemark);
+            const { bid, productName } = JSON.parse(document.getElementById('reAwardBidId').value);
+            const btn = document.querySelector('#reAwardForm button[type="submit"]');
+            await awardContract(btn, bid, productName, remarks);
         }
         
         async function loadVendorDashboard(vendorId) {
              const tbody = document.getElementById('vendor-req-tbody');
-             tbody.innerHTML = `<tr><td colspan="8" class="text-center">Loading requirements...</td></tr>`;
-             
-             const [allReqs, allAssignments, allBids, allAwarded] = await Promise.all([getData('Requirements'), getData('RequirementAssignments'), getData('Bids'), getData('AwardedContracts')]);
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center">Loading requirements...</td></tr>`;
+                
+                const [allItems, allAssignments, allBids, allAwarded] = await Promise.all([getData('AllRequirementsView', true), getData('RequisitionAssignments', true), getData('Bids', true), getData('AwardedContracts', true)]);
             
-             const myBids = (allBids || []).filter(b => b.VendorID === vendorId);
-             const assignedReqIds = (allAssignments || []).filter(a => a.VendorID === vendorId).map(a => a.RequirementID);
-             const assignedReqs = (allReqs || []).filter(r => assignedReqIds.includes(r.RequirementID));
-             const myAwardedContracts = (allAwarded || []).filter(c => c.VendorID === vendorId);
+                const myBids = (allBids || []).filter(b => b.VendorID === vendorId);
+                const assignedReqIds = new Set((allAssignments || []).filter(a => a.VendorID === vendorId).map(a => a.RequisitionID));
+                const assignedItems = (allItems || []).filter(item => assignedReqIds.has(item.RequisitionID));
+                const myAwardedContracts = (allAwarded || []).filter(c => c.VendorID === vendorId);
 
-             document.getElementById('vendor-stats-assigned').textContent = assignedReqs.filter(r => r.Status === 'Active').length;
-             document.getElementById('vendor-stats-submitted').textContent = myBids.length;
-             document.getElementById('vendor-stats-won').textContent = myAwardedContracts.length;
+                document.getElementById('vendor-stats-assigned').textContent = assignedItems.filter(i => i.Status === 'Active').length;
+                document.getElementById('vendor-stats-submitted').textContent = myBids.length;
+                document.getElementById('vendor-stats-won').textContent = myAwardedContracts.length;
 
-             tbody.innerHTML = '';
-             assignedReqs.forEach(req => {
-                 const allBidsForThisReq = (allBids || []).filter(b => b.RequirementID === req.RequirementID).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
-                 const myLatestBid = myBids.filter(b => b.RequirementID === req.RequirementID).sort((a, b) => new Date(b.SubmittedAt) - new Date(a.SubmittedAt))[0];
-                 
-                 const myRankIndex = myLatestBid ? allBidsForThisReq.findIndex(b => b.BidID === myLatestBid.BidID) : -1;
-                 const myRank = myRankIndex !== -1 ? `<span class="badge bg-info">L${myRankIndex + 1}</span>` : '-';
-                 
-                 let bidStatus = myLatestBid ? `<span class="badge bg-${getBadgeColor(myLatestBid.BidStatus)}">${myLatestBid.BidStatus}</span>` : 'Not Submitted';
-                 let l1RateInfo = '-';
-                 if (req.Status === 'Awarded') {
-                     if (allBidsForThisReq[0]) l1RateInfo = `₹${allBidsForThisReq[0].BidAmount}`;
-                     if(!myLatestBid || myLatestBid.BidStatus !== 'Awarded') bidStatus = `<span class="badge bg-danger">Closed</span>`;
-                 }
-                 
-                 const actionButton = req.Status === 'Active' ? `<button class="btn btn-sm btn-primary" onclick="openBidModal({RequirementID: '${req.RequirementID}', ProductName: '${req.ProductName}'})">Place Bid</button>` : `<button class="btn btn-sm btn-secondary" disabled>${req.Status}</button>`;
-                 
-                 tbody.innerHTML += `<tr><td>${req.RequirementID}</td><td>${req.ProductName}</td><td>${req.Quantity} ${req.Unit || ''}</td><td>${req.ImageURL ? `<a href="${req.ImageURL}" target="_blank"><i class="fas fa-image fa-lg text-primary"></i></a>` : '-'}</td><td>${bidStatus}</td><td>${myRank}</td><td>${l1RateInfo}</td><td>${actionButton}</td></tr>`;
-             });
-             changeInstructionLanguage('en');
+                tbody.innerHTML = assignedItems.length > 0 ? '' : `<tr><td colspan="8" class="text-center">No items assigned to you.</td></tr>`;
+                assignedItems.forEach(item => {
+                    const myLatestBid = myBids.filter(b => b.ItemID === item.ItemID).sort((a, b) => new Date(b.SubmittedAt) - new Date(a.SubmittedAt))[0];
+                    const allBidsForItem = (allBids || []).filter(b => b.ItemID === item.ItemID).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
+                    
+                    const myRankIndex = myLatestBid ? allBidsForItem.findIndex(b => b.BidID === myLatestBid.BidID) : -1;
+                    const myRank = myRankIndex !== -1 ? `<span class="badge bg-info">L${myRankIndex + 1}</span>` : '-';
+                    let bidStatus = myLatestBid ? `<span class="badge bg-${getBadgeColor(myLatestBid.BidStatus)}">${myLatestBid.BidStatus}</span>` : 'Not Submitted';
+                    
+                    let actionButton;
+                    if (item.Status === 'Awarded') {
+                        if (myLatestBid && myLatestBid.BidStatus === 'Awarded') {
+                            actionButton = `<button class="btn btn-sm btn-success" disabled>Awarded to You</button>`;
+                        } else {
+                            actionButton = `<button class="btn btn-sm btn-secondary" disabled>Item Awarded</button>`;
+                        }
+                    } else if (item.Status === 'Active') {
+                         actionButton = `<button class="btn btn-sm btn-primary" onclick='openBidModal(${JSON.stringify(item)})'>Place Bid</button>`;
+                    } else {
+                         actionButton = `<button class="btn btn-sm btn-secondary" disabled>${item.Status}</button>`;
+                    }
+
+                      const imageLinks = [item.DrawingURL, item.SpecimenURL].filter(Boolean).map((url, index) => `<a href="${url}" target="_blank" title="${index === 0 ? 'Drawing' : 'Specimen'}"><i class="fas ${index === 0 ? 'fa-ruler-combined' : 'fa-image'} fa-lg text-primary me-2"></i></a>`).join('') || '-';
+                      const freightIcon = item.FreightRequired ? `<i class="fas fa-truck text-success" title="Freight Included"></i>` : `<i class="fas fa-truck text-muted" title="No Freight"></i>`;
+                      const reqIdDisplay = `${item.RequisitionID.split('-')[1]}-${item.ItemSLNo}`;
+
+                      tbody.innerHTML += `<tr><td>${reqIdDisplay}</td><td>${item.ProductName}</td><td>${item.Quantity} ${item.Unit || ''}</td><td>${imageLinks}</td><td>${freightIcon}</td><td>${bidStatus}</td><td>${myRank}</td><td>${actionButton}</td></tr>`;
+                });
+                changeInstructionLanguage('en');
         }
 
         async function loadVendorAwarded(vendorId) {
             const tbody = document.getElementById('vendor-awarded-tbody');
             tbody.innerHTML = `<tr><td colspan="4" class="text-center">Loading...</td></tr>`;
-            const awarded = (await getData('AwardedContracts') || []).filter(c => c.VendorID === vendorId);
+            const awarded = (await getData('AwardedContracts', true) || []).filter(c => c.VendorID === vendorId);
             tbody.innerHTML = awarded.length > 0 ? '' : '<tr><td colspan="4" class="text-center">No contracts awarded to you yet.</td></tr>';
-            awarded.forEach(c => { tbody.innerHTML += `<tr><td>${c.ContractID}</td><td>${c.ProductName}</td><td>₹${c.AwardedAmount}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td></tr>`; });
+            awarded.forEach(c => { tbody.innerHTML += `<tr><td>${c.ContractID.split('-')[1]}</td><td>${c.ProductName}</td><td>${formatCurrency(c.AwardedAmount)}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td></tr>`; });
         }
 
-        function openBidModal(req) {
+        function openBidModal(item) {
             const currentUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
-            document.getElementById('bidModalTitle').textContent = `Bid for: ${req.ProductName}`;
-            document.getElementById('bid-req-id').value = req.RequirementID;
+            document.getElementById('bidModalTitle').textContent = `Bid for: ${item.ProductName}`;
+            document.getElementById('bid-item-id').value = item.ItemID;
             const form = document.getElementById('bid-form');
             form.reset();
-            const myBidsForThisReq = (APP_DATA.Bids || []).filter(b => b.RequirementID === req.RequirementID && b.VendorID === currentUser.UserID);
+
+            const exWorksInput = document.getElementById('bidExWorksRate');
+            const freightInput = document.getElementById('bidFreightRate');
+            const totalInput = document.getElementById('bidTotalAmount');
+            const freightStatusDiv = document.getElementById('bid-freight-status');
+
+            if (item.FreightRequired) {
+                freightStatusDiv.textContent = 'Freight charges are mandatory for this item.';
+                freightInput.disabled = false;
+                freightInput.required = true;
+                freightInput.placeholder = 'Mandatory';
+            } else {
+                freightStatusDiv.textContent = 'Freight charges are not required for this item.';
+                freightInput.disabled = true;
+                freightInput.required = false;
+                freightInput.value = 0;
+            }
+            
+            const calculateTotal = () => {
+                const exWorks = parseFloat(exWorksInput.value) || 0;
+                const freight = parseFloat(freightInput.value) || 0;
+                const quantity = parseFloat(item.Quantity) || 0;
+                const total = (quantity * exWorks) + (quantity * freight);
+                totalInput.value = total.toFixed(2);
+            };
+
+            exWorksInput.oninput = calculateTotal;
+            freightInput.oninput = calculateTotal;
+            
+            const myBidsForItem = (APP_DATA.Bids || []).filter(b => b.ItemID === item.ItemID && b.VendorID === currentUser.UserID);
             const submitButton = form.querySelector('button[type="submit"]');
-            submitButton.disabled = myBidsForThisReq.length >= 3;
-            submitButton.textContent = myBidsForThisReq.length >= 3 ? 'Maximum 3 Bids Reached' : `Submit Bid (${myBidsForThisReq.length + 1} of 3)`;
+            submitButton.disabled = myBidsForItem.length >= 3;
+            submitButton.textContent = myBidsForItem.length >= 3 ? 'Maximum 3 Bids Reached' : `Submit Bid (${myBidsForItem.length + 1} of 3)`;
             bidModal.show();
         }
 
         async function handleBidSubmit(e) {
             e.preventDefault();
             const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
-            const result = await postData({ action: 'createBid', data: { RequirementID: document.getElementById('bid-req-id').value, VendorID: user.UserID, BidAmount: document.getElementById('bidAmount').value, Comments: document.getElementById('bidComments').value, BidStatus: 'Submitted' } });
-            if (result.success) { showToast('Bid submitted!'); bidModal.hide(); await getData('Bids', true); loadVendorDashboard(user.UserID); }
+            const itemId = document.getElementById('bid-item-id').value;
+            const item = (APP_DATA.AllRequirementsView || []).find(i => i.ItemID === itemId);
+
+            const exWorksRate = parseFloat(document.getElementById('bidExWorksRate').value);
+            const freightRate = parseFloat(document.getElementById('bidFreightRate').value) || 0;
+            
+            if (item.FreightRequired && freightRate <= 0) {
+                showToast('Freight rate is mandatory and must be greater than zero.', 'error'); return;
+            }
+             if (!exWorksRate || exWorksRate <= 0) {
+                showToast('Ex-works rate is mandatory and must be greater than zero.', 'error'); return;
+            }
+
+            const quantity = parseFloat(item.Quantity) || 0;
+            const totalAmount = (quantity * exWorksRate) + (quantity * freightRate);
+
+            const result = await postData({ action: 'createBid', data: { ItemID: itemId, VendorID: user.UserID, BidAmount: totalAmount.toFixed(2), ExWorksRate: exWorksRate, FreightRate: freightRate, Comments: document.getElementById('bidComments').value } });
+            if (result.success) { showToast('Bid submitted!'); bidModal.hide(); handleManualRefresh(); }
         }
 
         async function loadUserCreateReq() {
+            document.getElementById('requisition-items-container').innerHTML = '';
+            itemCounter = 0;
+            addRequisitionItem();
             const checklistDiv = document.getElementById('req-vendor-checklist');
             checklistDiv.innerHTML = '<p class="text-muted">Loading vendors...</p>';
-            const vendors = (await getData('Users') || []).filter(u => u.Role === 'Vendor');
+            const vendors = (await getData('Users', true) || []).filter(u => u.Role === 'Vendor');
             if (vendors.length > 0) {
-                const selectAllHTML = `<div class="form-check fw-bold border-bottom pb-2 mb-2"><input class="form-check-input" type="checkbox" id="vendor-select-all"><label class="form-check-label" for="vendor-select-all">Select All Vendors</label></div>`;
-                const vendorListHTML = vendors.map(v => `<div class="form-check"><input class="form-check-input vendor-checkbox" type="checkbox" value="${v.UserID}" id="v-${v.UserID}"><label class="form-check-label" for="v-${v.UserID}">${v.FullName}</label></div>`).join('');
+                const selectAllHTML = `<div class="form-check fw-bold border-bottom pb-2 mb-2"><input class="form-check-input" type="checkbox" id="vendor-select-all"><label class="form-check-label" for="vendor-select-all">Select All</label></div>`;
+                const vendorListHTML = vendors.map(v => `<div class="form-check"><input class="form-check-input vendor-checkbox" type="checkbox" value="${v.UserID}" id="v-${v.UserID}"><label class="form-check-label" for="v-${v.UserID}">${v.FullName} (${v.CompanyName || 'N/A'})</label></div>`).join('');
                 checklistDiv.innerHTML = selectAllHTML + vendorListHTML;
                 document.getElementById('vendor-select-all').addEventListener('change', (e) => { document.querySelectorAll('.vendor-checkbox').forEach(checkbox => checkbox.checked = e.target.checked); });
             } else { checklistDiv.innerHTML = '<p class="text-danger">No registered vendors found.</p>'; }
             changeInstructionLanguage('en', 'user');
         }
+        
+        let itemCounter = 0;
+        function addRequisitionItem() {
+            itemCounter++;
+            const container = document.getElementById('requisition-items-container');
+            const itemCard = document.createElement('div');
+            itemCard.className = 'requisition-item-card';
+            itemCard.id = `item-card-${itemCounter}`;
+            itemCard.innerHTML = `
+                ${itemCounter > 1 ? '<button type="button" class="btn-close remove-item-btn" aria-label="Close" onclick="removeRequisitionItem('+itemCounter+')"></button>' : ''}
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="text-primary mb-0">Item #${itemCounter}</h6>
+                    <div class="form-check form-switch"><input class="form-check-input req-freight-required" type="checkbox" role="switch"><label class="form-check-label small">Freight Include?</label></div>
+                </div><hr class="my-2">
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Product Name</label><input type="text" class="form-control req-product-name" required></div>
+                    <div class="col-md-3 mb-3"><label class="form-label">Quantity</label><input type="number" class="form-control req-quantity" required></div>
+                    <div class="col-md-3 mb-3"><label class="form-label">Unit</label><select class="form-select req-unit" required><option value="Pcs">Pcs</option><option value="Kg">Kg</option><option value="Ltr">Ltr</option><option value="Box">Box</option><option value="Set">Set</option><option value="Mtr">Mtr</option></select></div>
+                </div>
+                <div class="mb-3"><label class="form-label">Description</label><textarea class="form-control req-description" rows="2"></textarea></div>
+                <div class="row">
+                    <div class="col-md-6 mb-3"><label class="form-label">Drawing Image (Optional)</label><input type="file" class="form-control req-drawing-image" accept="image/*"></div>
+                    <div class="col-md-6 mb-3"><label class="form-label">Specimen Image (Optional)</label><input type="file" class="form-control req-specimen-image" accept="image/*"></div>
+                </div>`;
+            container.appendChild(itemCard);
+        }
+
+        function removeRequisitionItem(id) {
+            document.getElementById(`item-card-${id}`).remove();
+        }
 
         async function loadUserStatusView() {
+            await Promise.all([getData('AllRequirementsView', true), getData('AwardedContracts', true)]);
+            document.getElementById('user-req-start-date').addEventListener('change', renderUserStatusList);
+            document.getElementById('user-req-end-date').addEventListener('change', renderUserStatusList);
+            renderUserStatusList();
+        }
+        
+        function renderUserStatusList() {
             const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
             const listDiv = document.getElementById('user-req-status-list');
             listDiv.innerHTML = `<div class="list-group-item text-center">Loading...</div>`;
-            const [myReqs, awarded] = await Promise.all([getData('Requirements'), getData('AwardedContracts')]);
-            const filteredReqs = (myReqs || []).filter(r => r.CreatedBy === user.UserID).sort((a,b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
+
+            const allItems = APP_DATA.AllRequirementsView || [];
+            const awarded = APP_DATA.AwardedContracts || [];
+            
+            const startDate = document.getElementById('user-req-start-date').value;
+            const endDate = document.getElementById('user-req-end-date').value;
+
+            let myItems = (allItems || [])
+                .filter(r => r.CreatedBy === user.UserID)
+                .sort((a, b) => new Date(b.CreatedAt) - new Date(a.CreatedAt));
+            
+            if (startDate) myItems = myItems.filter(item => new Date(item.CreatedAt) >= new Date(startDate));
+            if (endDate) myItems = myItems.filter(item => new Date(item.CreatedAt) <= new Date(endDate));
+
+            const groupedByReqId = myItems.reduce((acc, item) => {
+                if (!acc[item.RequisitionID]) {
+                    acc[item.RequisitionID] = { items: [], date: item.CreatedAt, status: item.Status };
+                }
+                acc[item.RequisitionID].items.push(item);
+                // The parent status is 'Active' if any child is 'Active'
+                if(item.Status === 'Active' || item.Status === 'Pending Approval' || (acc[item.RequisitionID].status !== 'Awarded' && acc[item.RequisitionID].status !== 'Closed')) {
+                    if (item.Status === 'Active') acc[item.RequisitionID].status = 'Active';
+                    else if(acc[item.RequisitionID].status !== 'Active') acc[item.RequisitionID].status = item.Status;
+                }
+
+                return acc;
+            }, {});
+
             listDiv.innerHTML = '';
-            if(filteredReqs.length > 0) {
-                filteredReqs.forEach(req => {
-                    let awardedInfo = '';
-                    if (req.Status === 'Awarded') {
-                        const contract = (awarded || []).find(c => c.RequirementID === req.RequirementID && !c.Remarks?.includes('Superseded'));
-                        if(contract) awardedInfo = `<small class="d-block text-muted">Awarded to: ${contract.VendorName} for ₹${contract.AwardedAmount}</small>`;
-                    }
-                    listDiv.innerHTML += `<div class="list-group-item"><div class="d-flex w-100 justify-content-between"><h6 class="mb-1">${req.ProductName}</h6><div>${req.ImageURL ? `<a href="${req.ImageURL}" target="_blank" class="me-2" title="View Image"><i class="fas fa-image"></i></a>` : ''}<span class="badge bg-${getBadgeColor(req.Status)}">${req.Status}</span></div></div>${awardedInfo}</div>`;
-                });
-            } else { listDiv.innerHTML = '<div class="list-group-item">You have not created any requisitions yet.</div>'; }
+            if(Object.keys(groupedByReqId).length > 0) {
+                 for(const reqId in groupedByReqId) {
+                      const reqGroup = groupedByReqId[reqId];
+                      let itemsHTML = '';
+                      reqGroup.items.forEach(item => {
+                          let awardedInfo = '';
+                          if (item.Status === 'Awarded') {
+                              const contract = (awarded || []).find(c => c.ItemID === item.ItemID);
+                              if(contract) awardedInfo = `<small class="d-block text-success">Awarded to: ${contract.VendorName} for ${formatCurrency(contract.AwardedAmount)}</small>`;
+                          }
+                          const imageLinks = [item.DrawingURL, item.SpecimenURL].filter(Boolean).map((url, index) => `<a href="${url}" target="_blank" class="me-2" title="${index === 0 ? 'Drawing' : 'Specimen'}"><i class="fas ${index === 0 ? 'fa-ruler-combined' : 'fa-image'}"></i></a>`).join('');
+                          itemsHTML += `<li class="list-group-item py-2"><div class="d-flex w-100 justify-content-between"><small><strong>${item.ItemSLNo}.</strong> ${item.ProductName}</small><div>${imageLinks}<span class="badge bg-${getBadgeColor(item.Status)}">${item.Status}</span></div></div>${awardedInfo}</li>`;
+                      });
+
+                      const parentRequisition = (APP_DATA.AllRequirementsView || []).find(r => r.RequisitionID === reqId);
+                      const parentStatus = parentRequisition ? parentRequisition.Status : reqGroup.status;
+
+                      listDiv.innerHTML += `
+                          <div class="card mb-3">
+                              <div class="card-header d-flex justify-content-between">
+                                  <strong>Req ID: ${reqId.split('-')[1]}</strong>
+                                  <span class="badge bg-${getBadgeColor(parentStatus)}">${parentStatus}</span>
+                              </div>
+                              <ul class="list-group list-group-flush">${itemsHTML}</ul>
+                          </div>`;
+                  }
+            } else { listDiv.innerHTML = '<div class="list-group-item text-center p-4">No requisitions found in the selected date range.</div>'; }
             changeInstructionLanguage('en', 'user');
         }
 
@@ -823,57 +963,79 @@
             const submitButton = e.target.querySelector('button[type="submit"]');
             submitButton.disabled = true; submitButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Submitting...`;
             
-            const imageFile = document.getElementById('req-image').files[0];
-            let imageUrl = '';
-            if (imageFile) {
-                const reader = new FileReader();
-                reader.readAsDataURL(imageFile);
-                const base64File = await new Promise((resolve) => { reader.onload = () => resolve(reader.result); });
-                const uploadResult = await postData({ action: 'uploadImage', data: { file: base64File, fileName: imageFile.name, mimeType: imageFile.type } });
-                if (uploadResult?.success) { imageUrl = uploadResult.fileUrl; } 
-                else { showToast('Image upload failed', 'error'); submitButton.disabled = false; submitButton.textContent = 'Submit for Approval'; return; }
-            }
-            
             const currentUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
             const selectedVendorIds = Array.from(document.querySelectorAll('#req-vendor-checklist input:checked')).map(input => input.value);
+            const itemCards = document.querySelectorAll('.requisition-item-card');
             
-            const result = await postData({ action: 'createRequisition', data: { ProductName: document.getElementById('req-product-name').value, Quantity: document.getElementById('req-quantity').value, Unit: document.getElementById('req-unit').value, Description: document.getElementById('req-description').value, ImageURL: imageUrl, CreatedBy: currentUser.UserID, vendorIds: selectedVendorIds } });
+            if (itemCards.length === 0) {
+                showToast('Please add at least one item.', 'error');
+                submitButton.disabled = false; submitButton.textContent = 'Submit Requisition for Approval';
+                return;
+            }
+
+            const itemsPayload = [];
+            try {
+                for (const card of itemCards) {
+                    const drawingFile = card.querySelector('.req-drawing-image').files[0];
+                    const specimenFile = card.querySelector('.req-specimen-image').files[0];
+                    
+                    const uploadImage = async (file) => {
+                        if (!file) return '';
+                        const reader = new FileReader();
+                        reader.readAsDataURL(file);
+                        const base64File = await new Promise((resolve) => { reader.onload = () => resolve(reader.result); });
+                        const uploadResult = await postData({ action: 'uploadImage', data: { file: base64File, fileName: file.name, mimeType: file.type } });
+                        if (uploadResult?.success) return uploadResult.fileUrl;
+                        throw new Error(`Image upload failed for ${file.name}`);
+                    };
+
+                    const [drawingUrl, specimenUrl] = await Promise.all([uploadImage(drawingFile), uploadImage(specimenFile)]);
+
+                    itemsPayload.push({
+                        ProductName: card.querySelector('.req-product-name').value,
+                        Quantity: card.querySelector('.req-quantity').value,
+                        Unit: card.querySelector('.req-unit').value,
+                        Description: card.querySelector('.req-description').value,
+                        DrawingURL: drawingUrl,
+                        SpecimenURL: specimenUrl,
+                        FreightRequired: card.querySelector('.req-freight-required').checked,
+                    });
+                }
+            } catch (error) {
+                showToast(error.message, 'error');
+                submitButton.disabled = false; submitButton.textContent = 'Submit Requisition for Approval';
+                return;
+            }
+            
+            const result = await postData({ 
+                action: 'createRequisition', 
+                data: { 
+                    CreatedBy: currentUser.UserID, 
+                    vendorIds: selectedVendorIds,
+                    items: itemsPayload
+                } 
+            });
+
             if (result.success) {
-                showToast(result.message); e.target.reset();
-                await Promise.all([getData('Requirements', true), getData('RequirementAssignments', true)]);
+                showToast(result.message);
+                e.target.reset();
+                handleManualRefresh();
                 navigateTo('user-status-view');
             }
-            submitButton.disabled = false; submitButton.textContent = 'Submit for Approval';
-        }
-        
-        async function processBulkUpload() {
-            const file = document.getElementById('bulkUploadInput').files[0];
-            if (!file) { showToast("Please select a file first.", "error"); return; }
-            const statusDiv = document.getElementById('upload-status');
-            statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm"></div> Reading file...`;
-            const data = await file.arrayBuffer();
-            let requirements = [];
-            if (file.name.endsWith('.csv')) { requirements = Papa.parse(new TextDecoder("utf-8").decode(data), { header: true, skipEmptyLines: true }).data; }
-            else { const workbook = XLSX.read(data, { type: 'array' }); requirements = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); }
-            
-            if (requirements.length > 0) {
-                statusDiv.innerHTML = `<div class="spinner-border spinner-border-sm"></div> Uploading ${requirements.length} records...`;
-                const result = await postData({ action: 'bulkUploadRequirements', data: requirements });
-                statusDiv.innerHTML = result.success ? `<span class="text-success">${result.message}</span>` : `<span class="text-danger">Error: ${result.error}</span>`;
-                if(result.success) { await getData('Requirements', true); loadAdminRequirements(); }
-            }
+
+            submitButton.disabled = false; submitButton.textContent = 'Submit Requisition for Approval';
         }
         
         const INSTRUCTIONS = {
             vendor: {
-                en: "<ul><li><b>Place Bid:</b> Click 'Place Bid' for active tenders. You can bid up to 3 times per item.</li><li><b>My Rank:</b> After bidding, your live rank (L1, L2, etc.) appears in 'My Rank'.</li><li><b>L1 Rate:</b> Once awarded, the winning price appears in 'L1 Rate'.</li><li><b>Awarded Contracts:</b> Find your won contracts in the 'My Awarded Contracts' tab.</li></ul>",
-                hi: "<ul><li><b>बोली लगाएं:</b> सक्रिय निविदाओं के लिए 'Place Bid' बटन पर क्लिक करें। आप प्रति आइटम 3 बार तक बोली लगा सकते हैं।</li><li><b>मेरी रैंक:</b> बोली लगाने के बाद, आपकी लाइव रैंक (L1, L2, आदि) 'My Rank' कॉलम में दिखाई देगी।</li><li><b>L1 दर:</b> अनुबंध दिए जाने के बाद, 'L1 Rate' कॉलम में विजेता बोली की कीमत दिखाई देगी।</li><li><b>मेरे सम्मानित अनुबंध:</b> आपको दिए गए अनुबंध 'My Awarded Contracts' टैब में दिखाई देंगे।</li></ul>",
-                bn: "<ul><li><b>বিড করুন:</b> সক্রিয় টেন্ডারের জন্য 'Place Bid' বোতামে ক্লিক করুন। আপনি প্রতি আইটেমের জন্য ৩ বার পর্যন্ত বিড করতে পারেন।</li><li><b>আমার র‍্যাঙ্ক:</b> বিড করার পরে, আপনার লাইভ র‍্যাঙ্ক (L1, L2, ইত্যাদি) 'My Rank' কলামে দেখানো হবে।</li><li><b>L1 হার:</b> চুক্তি পুরস্কারের পরে, বিজয়ী বিডের মূল্য 'L1 Rate' কলামে দেখানো হবে।</li><li><b>আমার পুরস্কারপ্রাপ্ত চুক্তি:</b> আপনাকে দেওয়া চুক্তিগুলি 'My Awarded Contracts' ট্যাবে উপস্থিত হবে।</li></ul>"
+                en: "<ul><li><b>Place Bid:</b> Enter Ex-works and Freight (if required) rates per unit. The total amount is calculated automatically. You can bid up to 3 times per item.</li><li><b>My Rank:</b> After bidding, your live rank (L1, L2, etc.) appears here based on the total calculated amount.</li></ul>",
+                hi: "<ul><li><b>बोली लगाएं:</b> प्रति यूनिट एक्स-वर्क्स और भाड़ा (यदि आवश्यक हो) दरें दर्ज करें। कुल राशि की गणना स्वचालित रूप से की जाती है। आप प्रति आइटम 3 बार तक बोली लगा सकते हैं।</li><li><b>मेरी रैंक:</b> बोली लगाने के बाद, कुल गणना की गई राशि के आधार पर आपकी लाइव रैंक (L1, L2, आदि) यहां दिखाई देगी।</li></ul>",
+                bn: "<ul><li><b>বিড করুন:</b> প্রতি ইউনিটের এক্স-ওয়ার্কস এবং ফ্রেট (যদি প্রয়োজন হয়) রেট লিখুন। মোট পরিমাণ স্বয়ংক্রিয়ভাবে গণনা করা হয়। আপনি প্রতি আইটেম 3 বার পর্যন্ত বিড করতে পারেন।</li><li><b>আমার র‍্যাঙ্ক:</b> বিড করার পরে, আপনার লাইভ র‍্যাঙ্ক (L1, L2, ইত্যাদি) মোট গণনাকৃত পরিমাণের উপর ভিত্তি করে এখানে প্রদর্শিত হবে।</li></ul>"
             },
             user: {
-                en: "<ul><li><b>Create Requisition:</b> Fill the form and select vendors to submit a purchase request.</li><li><b>My Requisition Status:</b> Track the live status of your requests here.</li><li><b>Status Meaning:</b> 'Pending' means awaiting admin approval. 'Active' means bidding is live. 'Awarded' means the contract is finalized.</li></ul>",
-                hi: "<ul><li><b>अनुरोध बनाएं:</b> खरीद अनुरोध जमा करने के लिए फॉर्म भरें और विक्रेताओं का चयन करें।</li><li><b>मेरे अनुरोध की स्थिति:</b> आप यहां अपने अनुरोधों की लाइव स्थिति देख सकते हैं।</li><li><b>स्थिति का अर्थ:</b> 'Pending' का मतलब है व्यवस्थापक की मंजूरी का इंतजार है। 'Active' का मतलब है बोली-प्रक्रिया चल रही है। 'Awarded' का मतलब है अनुबंध हो चुका है।</li></ul>",
-                bn: "<ul><li><b>রিকুইজিশন তৈরি করুন:</b> ক্রয়ের অনুরোধ জমা দিতে ফর্মটি পূরণ করুন এবং বিক্রেতাদের নির্বাচন করুন।</li><li><b>আমার রিকুইজিশনের স্থিতি:</b> আপনি এখানে আপনার অনুরোধগুলির লাইভ স্ট্যাটাস দেখতে পারেন।</li><li><b>স্ট্যাটাসের অর্থ:</b> 'Pending' মানে অ্যাডমিনের অনুমোদনের অপেক্ষা। 'Active' মানে বিডিং চলছে। 'Awarded' মানে চুক্তি চূড়ান্ত হয়েছে।</li></ul>"
+                en: "<ul><li><b>Create Requisition:</b> Add one or more items. For each item, you can specify if freight should be included. Select vendors at the bottom to notify them.</li><li><b>My Requisition Status:</b> Track the status of your requisitions and the items within them.</li></ul>",
+                hi: "<ul><li><b>अनुरोध बनाएं:</b> एक या अधिक आइटम जोड़ें। प्रत्येक आइटम के लिए, आप निर्दिष्ट कर सकते हैं कि भाड़ा शामिल किया जाना चाहिए या नहीं। उन्हें सूचित करने के लिए नीचे विक्रेताओं का चयन करें।</li><li><b>मेरे अनुरोध की स्थिति:</b> अपने अनुरोधों और उनके भीतर की वस्तुओं की स्थिति को ट्रैक करें।</li></ul>",
+                bn: "<ul><li><b>রিকুইজিশন তৈরি করুন:</b> এক বা একাধিক আইটেম যোগ করুন। প্রতিটি আইটেমের জন্য, আপনি ফ্রেট অন্তর্ভুক্ত করা উচিত কিনা তা নির্দিষ্ট করতে পারেন। তাদের অবহিত করতে নীচে বিক্রেতাদের নির্বাচন করুন।</li><li><b>আমার রিকুইজিশনের স্থিতি:</b> আপনার রিকুইজিশন এবং তার মধ্যে থাকা আইটেমগুলির স্থিতি ট্র্যাক করুন।</li></ul>"
             }
         };
 
@@ -887,71 +1049,8 @@
             }
         }
         
-        async function downloadVendorBidsHistory() {
-            const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
-            let bids = await getData('Bids');
-            let myBids = (bids || []).filter(b => b.VendorID === user.UserID);
-            const startDate = document.getElementById('vendor-history-start').value;
-            const endDate = document.getElementById('vendor-history-end').value;
-            if (startDate) myBids = myBids.filter(b => new Date(b.SubmittedAt) >= new Date(startDate));
-            if (endDate) myBids = myBids.filter(b => new Date(b.SubmittedAt) <= new Date(endDate));
-
-            if (myBids.length === 0) { showToast("No bids found for the selected date range.", "error"); return; }
-            
-            const reqs = await getData('Requirements');
-            const reportData = myBids.map(b => ({"Requirement ID": b.RequirementID, "Product Name": reqs.find(r => r.RequirementID === b.RequirementID)?.ProductName || 'N/A', "My Bid Amount (₹)": b.BidAmount, "Bid Status": b.BidStatus, "Comments": b.Comments, "Submitted At": new Date(b.SubmittedAt).toLocaleString()}));
-            const worksheet = XLSX.utils.json_to_sheet(reportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "My Bids History");
-            XLSX.writeFile(workbook, `Bids_History_${user.FullName}.xlsx`);
-        }
-
-        async function downloadFullHistoryReportAsExcel() {
-            showToast('Generating detailed report... This may take a moment.');
-            const [awarded, bids, users] = await Promise.all([getData('AwardedContracts'), getData('Bids'), getData('Users')]);
-            if (!awarded || awarded.length === 0) { showToast("No history data to download.", "error"); return; }
-            
-            const reportData = [];
-            awarded.forEach(c => {
-                const bidsForReq = (bids || []).filter(b => b.RequirementID === c.RequirementID).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
-                if (bidsForReq.length > 0) {
-                    bidsForReq.forEach((bid, index) => {
-                        reportData.push({ "Requirement ID": c.RequirementID, "Product Name": c.ProductName, "Awarded Date": new Date(c.AwardedDate).toLocaleDateString(), "Bidder Rank": `L${index + 1}`, "Vendor Name": (users.find(u => u.UserID === bid.VendorID) || {}).FullName || 'N/A', "Bid Amount (₹)": bid.BidAmount, "Bid Status": bid.BidStatus });
-                    });
-                }
-            });
-
-            const worksheet = XLSX.utils.json_to_sheet(reportData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Detailed Awarded History");
-            XLSX.writeFile(workbook, "Detailed_Awarded_History.xlsx");
-        }
-
-        async function downloadAdvancedRequirementsReport() {
-             showToast('Generating advanced report...');
-             const [reqs, bids, users] = await Promise.all([getData('Requirements'), getData('Bids'), getData('Users')]);
-             const reportData = [];
-             (reqs || []).forEach(req => {
-                 const bidsForReq = (bids || []).filter(b => b.RequirementID === req.RequirementID).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
-                 if (bidsForReq.length > 0) {
-                     bidsForReq.forEach((bid, index) => {
-                         const vendor = (users || []).find(u => u.UserID === bid.VendorID);
-                         reportData.push({ RequirementID: req.RequirementID, ProductName: req.ProductName, RequirementStatus: req.Status, BidRank: `L${index + 1}`, VendorName: vendor ? vendor.FullName : 'N/A', BidAmount_INR: bid.BidAmount, BidStatus: bid.BidStatus, BidDate: new Date(bid.SubmittedAt).toLocaleString() });
-                     });
-                 } else {
-                     reportData.push({ RequirementID: req.RequirementID, ProductName: req.ProductName, RequirementStatus: req.Status, BidRank: '-', VendorName: 'No Bids', BidAmount_INR: '-', BidStatus: '-', BidDate: '-' });
-                 }
-             });
-             const csv = Papa.unparse(reportData);
-             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-             const link = document.createElement("a");
-             link.href = URL.createObjectURL(blob);
-             link.download = "advanced_requirements_report.csv";
-             link.click();
-        }
-        
         function getBadgeColor(status) {
-            const colors = { 'Awarded': 'primary', 'Active': 'success', 'Pending Approval': 'warning', 'Superseded': 'secondary', 'Submitted': 'info', 'Closed': 'danger' };
+            const colors = { 'Awarded': 'primary', 'Active': 'success', 'Pending Approval': 'warning', 'Superseded': 'secondary', 'Submitted': 'info', 'Rejected': 'danger', 'Closed': 'dark' };
             return colors[status] || 'dark';
         }
 
@@ -966,6 +1065,345 @@
 
         function showLoader() { document.getElementById('loader-overlay').classList.remove('hidden'); }
         function hideLoader() { document.getElementById('loader-overlay').classList.add('hidden'); }
+
+        // --- NEW/UPDATED FUNCTIONS ---
+        function formatCurrency(value) {
+            const num = parseFloat(value);
+            if (isNaN(num)) {
+                return '₹?';
+            }
+            return `₹${num.toLocaleString('en-IN')}`;
+        }
+
+        async function reopenBidding(btn, itemId) {
+            if (!confirm("Are you sure you want to re-open bidding for this item? The current award will be cancelled.")) {
+                return;
+            }
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Re-opening...`;
+            
+            const result = await postData({ action: 'reopenBidding', data: { ItemID: itemId } });
+
+            if (result.success) {
+                showToast('Bidding has been re-opened successfully.', 'success');
+                adminActionModal.hide();
+                handleManualRefresh();
+            } else {
+                showToast('Failed to re-open bidding.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Re-open Bidding';
+            }
+        }
+        
+        async function downloadFullHistoryReportAsExcel() {
+             showToast('Generating detailed report...', 'info');
+             const [awarded, bids, users, allItems] = await Promise.all([getData('AwardedContracts', true), getData('Bids', true), getData('Users', true), getData('AllRequirementsView', true)]);
+             
+             if(!awarded || awarded.length === 0) {
+                 showToast('No awarded contract history found.', 'warning');
+                 return;
+            }
+
+            const detailedReportData = [];
+            
+            for (const contract of awarded) {
+                const itemDetails = (allItems || []).find(i => i.ItemID === contract.ItemID) || {};
+                const itemBids = (bids || []).filter(b => b.ItemID === contract.ItemID).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
+
+                if (itemBids.length > 0) {
+                    itemBids.forEach((bid, index) => {
+                        const vendor = (users || []).find(u => u.UserID === bid.VendorID) || {};
+                        detailedReportData.push({
+                            "Requisition ID": contract.RequisitionID,
+                            "Product Name": contract.ProductName,
+                            "Quantity": itemDetails.Quantity,
+                            "Unit": itemDetails.Unit,
+                            "Bid Rank": `L${index + 1}`,
+                            "Vendor": vendor.FullName,
+                            "Company": vendor.CompanyName,
+                            "Total Bid Amount (₹)": bid.BidAmount,
+                            "Ex-works Rate (₹)": bid.ExWorksRate,
+                            "Freight Rate (₹)": bid.FreightRate,
+                            "Comments": bid.Comments,
+                            "Bid Status": (bid.BidID === contract.WinningBidID) ? "Awarded Winner" : "Not Awarded",
+                            "Awarded Date": new Date(contract.AwardedDate).toLocaleDateString()
+                        });
+                    });
+                } else {
+                     detailedReportData.push({
+                        "Requisition ID": contract.RequisitionID, "Product Name": contract.ProductName,
+                        "Quantity": itemDetails.Quantity, "Unit": itemDetails.Unit,
+                        "Bid Rank": "-", "Vendor": contract.VendorName, "Company": "-",
+                        "Total Bid Amount (₹)": contract.AwardedAmount,
+                        "Ex-works Rate (₹)": "N/A", "Freight Rate (₹)": "N/A", "Comments": "No detailed bid data found",
+                        "Bid Status": "Awarded Winner", "Awarded Date": new Date(contract.AwardedDate).toLocaleDateString()
+                    });
+                }
+            }
+
+            const worksheet = XLSX.utils.json_to_sheet(detailedReportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "DetailedBiddingHistory");
+            XLSX.writeFile(workbook, "Full_Bidding_History_Report.xlsx");
+        }
+        
+        async function downloadVendorBidsHistory() {
+            const vendorId = JSON.parse(sessionStorage.getItem('loggedInUser')).UserID;
+            const startDate = document.getElementById('vendor-history-start').value;
+            const endDate = document.getElementById('vendor-history-end').value;
+
+            showToast('Generating report...', 'info');
+            const [bids, items] = await Promise.all([getData('Bids', true), getData('AllRequirementsView', true)]);
+            
+            let vendorBids = (bids || []).filter(b => b.VendorID === vendorId);
+
+            if (startDate) vendorBids = vendorBids.filter(b => new Date(b.SubmittedAt) >= new Date(startDate));
+            if (endDate) vendorBids = vendorBids.filter(b => new Date(b.SubmittedAt) <= new Date(endDate));
+
+            if(vendorBids.length === 0) {
+                showToast('No bids found in the selected date range.', 'warning');
+                return;
+            }
+
+            const reportData = vendorBids.map(bid => {
+                const item = (items || []).find(i => i.ItemID === bid.ItemID) || {};
+                return {
+                    "Requisition ID": item.RequisitionID, "Item SL No": item.ItemSLNo, "Product Name": item.ProductName,
+                    "Bid Amount (₹)": bid.BidAmount, "Ex-works Rate (₹)": bid.ExWorksRate, "Freight Rate (₹)": bid.FreightRate,
+                    "Bid Status": bid.BidStatus, "Submitted At": new Date(bid.SubmittedAt).toLocaleString()
+                };
+            });
+            
+            const worksheet = XLSX.utils.json_to_sheet(reportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "MyBidsHistory");
+            XLSX.writeFile(workbook, "My_Bids_History.xlsx");
+        }
+        
+        async function showHistoryDetailModal(itemId) {
+            const tbody = document.getElementById('history-detail-tbody');
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center">Loading...</td></tr>`;
+            const [bids, users] = await Promise.all([getData('Bids'), getData('Users')]);
+            const itemBids = (bids || []).filter(b => b.ItemID === itemId).sort((a,b) => parseFloat(a.BidAmount) - parseFloat(b.BidAmount));
+            
+            tbody.innerHTML = itemBids.length > 0 ? '' : `<tr><td colspan="4" class="text-center">No bids were placed for this item.</td></tr>`;
+            itemBids.forEach((bid, index) => {
+                const vendorName = (users || []).find(u => u.UserID === bid.VendorID)?.FullName || 'N/A';
+                tbody.innerHTML += `<tr><td><span class="badge bg-info">L${index + 1}</span></td><td>${vendorName}</td><td>${formatCurrency(bid.BidAmount)}</td><td>${bid.Comments || '-'}</td></tr>`;
+            });
+            historyDetailModal.show();
+        }
+
+        async function loadAdminReports() {
+            await Promise.all([getData('AwardedContracts', true), getData('AllRequirementsView', true), getData('Users', true)]);
+            document.getElementById('report-apply-filter').onclick = updateReportView;
+            updateReportView();
+        }
+
+        function updateReportView() {
+            const awardedData = APP_DATA.AwardedContracts || [];
+            const allItems = APP_DATA.AllRequirementsView || [];
+            
+            const startDate = document.getElementById('report-start-date').value;
+            const endDate = document.getElementById('report-end-date').value;
+            
+            const filteredAwarded = awardedData.filter(c => {
+                 const awardDate = new Date(c.AwardedDate);
+                 return (!startDate || awardDate >= new Date(startDate)) && (!endDate || awardDate <= new Date(endDate));
+            });
+
+            const totalSpend = filteredAwarded.reduce((sum, item) => sum + parseFloat(item.AwardedAmount || 0), 0);
+            document.getElementById('report-total-spend').textContent = formatCurrency(totalSpend);
+            document.getElementById('report-awarded-items').textContent = filteredAwarded.length;
+            document.getElementById('report-active-items').textContent = allItems.filter(i => i.Status === 'Active').length;
+            
+            const spendByVendor = filteredAwarded.reduce((acc, item) => {
+                acc[item.VendorName] = (acc[item.VendorName] || 0) + parseFloat(item.AwardedAmount || 0);
+                return acc;
+            }, {});
+            
+            const topVendor = Object.entries(spendByVendor).sort(([,a],[,b]) => b-a)[0];
+            document.getElementById('report-top-vendor').textContent = topVendor ? topVendor[0] : '-';
+
+            const vendorCtx = document.getElementById('vendorSpendChart').getContext('2d');
+            if(vendorSpendChart) vendorSpendChart.destroy();
+            vendorSpendChart = new Chart(vendorCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(spendByVendor),
+                    datasets: [{ label: 'Total Spend (₹)', data: Object.values(spendByVendor), backgroundColor: 'rgba(54, 162, 235, 0.6)', borderColor: 'rgba(54, 162, 235, 1)', borderWidth: 1 }]
+                },
+                options: { scales: { y: { beginAtZero: true } }, responsive: true, maintainAspectRatio: false }
+            });
+
+            const statusCounts = allItems.reduce((acc, item) => {
+                acc[item.Status] = (acc[item.Status] || 0) + 1;
+                return acc;
+            }, {});
+            const pieCtx = document.getElementById('itemStatusChart').getContext('2d');
+            if(itemStatusChart) itemStatusChart.destroy();
+            itemStatusChart = new Chart(pieCtx, {
+                type: 'pie',
+                data: {
+                    labels: Object.keys(statusCounts),
+                    datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#198754', '#ffc107', '#0d6efd', '#6c757d', '#dc3545'], }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+            
+            const reportTbody = document.getElementById('report-details-tbody');
+            reportTbody.innerHTML = filteredAwarded.length === 0 ? `<tr><td colspan="5" class="text-center">No awarded data in this period.</td></tr>` : '';
+            filteredAwarded.forEach(c => {
+                reportTbody.innerHTML += `<tr><td>${c.RequisitionID.split('-')[1]}</td><td>${c.ProductName}</td><td>${c.VendorName}</td><td>${formatCurrency(c.AwardedAmount)}</td><td>${new Date(c.AwardedDate).toLocaleDateString()}</td></tr>`;
+            });
+        }
+        
+        function downloadBulkTemplate() {
+            const templateData = [{
+                ProductName: "Example Product", Quantity: 100, Unit: "Pcs", Description: "Optional description here", FreightRequired: "Yes"
+            }];
+            const worksheet = XLSX.utils.json_to_sheet(templateData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Template");
+            XLSX.writeFile(workbook, "Bulk_Upload_Template.xlsx");
+        }
+
+        async function loadVendorsForBulkUpload() {
+            const checklistDiv = document.getElementById('bulk-vendor-checklist');
+            checklistDiv.innerHTML = '<p class="text-muted">Loading vendors...</p>';
+            const vendors = (await getData('Users', true) || []).filter(u => u.Role === 'Vendor');
+            if (vendors.length > 0) {
+                const vendorListHTML = vendors.map(v => `<div class="form-check"><input class="form-check-input" type="checkbox" value="${v.UserID}" id="bulk-v-${v.UserID}"><label class="form-check-label" for="bulk-v-${v.UserID}">${v.FullName}</label></div>`).join('');
+                checklistDiv.innerHTML = vendorListHTML;
+            } else {
+                checklistDiv.innerHTML = '<p class="text-danger">No registered vendors found.</p>';
+            }
+        }
+
+        async function handleBulkUpload(e) {
+            e.preventDefault();
+            const submitButton = e.target.querySelector('button[type="submit"]');
+            const fileInput = document.getElementById('bulk-upload-file');
+            const file = fileInput.files[0];
+            if (!file) { showToast('Please select a file.', 'error'); return; }
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Uploading...`;
+
+            const reader = new FileReader();
+            reader.onload = async (event) => {
+                try {
+                    const data = new Uint8Array(event.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+
+                    if (json.length === 0) throw new Error('Excel file is empty or invalid.');
+                    
+                    const requiredCols = ['ProductName', 'Quantity', 'Unit'];
+                    for (const col of requiredCols) {
+                        if (!json[0].hasOwnProperty(col)) throw new Error(`Missing required column in Excel: ${col}`);
+                    }
+
+                    const itemsPayload = json.map(row => ({
+                        ProductName: row.ProductName, Quantity: row.Quantity, Unit: row.Unit, Description: row.Description || '',
+                        DrawingURL: '', SpecimenURL: '', FreightRequired: (row.FreightRequired || 'no').toLowerCase() === 'yes'
+                    }));
+
+                    const currentUser = JSON.parse(sessionStorage.getItem('loggedInUser'));
+                    const selectedVendorIds = Array.from(document.querySelectorAll('#bulk-vendor-checklist input:checked')).map(input => input.value);
+                    
+                    const result = await postData({ 
+                        action: 'createRequisition', 
+                        data: { CreatedBy: currentUser.UserID, vendorIds: selectedVendorIds, items: itemsPayload } 
+                    });
+
+                    if (result.success) {
+                        showToast('Bulk upload successful!', 'success');
+                        bulkUploadModal.hide();
+                        e.target.reset();
+                        handleManualRefresh();
+                    }
+                } catch (err) {
+                    console.error("Bulk upload error:", err);
+                    showToast(err.message, 'error');
+                } finally {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = 'Upload and Submit';
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        async function downloadUserRequisitionHistory() {
+            const user = JSON.parse(sessionStorage.getItem('loggedInUser'));
+            showToast('Generating your report...', 'info');
+            
+            const [allItems, awarded] = await Promise.all([getData('AllRequirementsView', true), getData('AwardedContracts', true)]);
+            
+            const startDate = document.getElementById('user-req-start-date').value;
+            const endDate = document.getElementById('user-req-end-date').value;
+
+            let myItems = (allItems || []).filter(item => item.CreatedBy === user.UserID);
+
+            if (startDate) myItems = myItems.filter(item => new Date(item.CreatedAt) >= new Date(startDate));
+            if (endDate) myItems = myItems.filter(item => new Date(item.CreatedAt) <= new Date(endDate));
+
+            if (myItems.length === 0) {
+                showToast('No requisitions found for the selected criteria.', 'warning');
+                return;
+            }
+
+            const reportData = myItems.map(item => {
+                let awardedInfo = { "Awarded To": "N/A", "Awarded Amount (₹)": "N/A" };
+                if (item.Status === 'Awarded') {
+                    const contract = (awarded || []).find(c => c.ItemID === item.ItemID);
+                    if (contract) {
+                        awardedInfo["Awarded To"] = contract.VendorName;
+                        awardedInfo["Awarded Amount (₹)"] = contract.AwardedAmount;
+                    }
+                }
+                return {
+                    "Requisition ID": item.RequisitionID, "Item SL No": item.ItemSLNo, "Product Name": item.ProductName,
+                    "Quantity": item.Quantity, "Unit": item.Unit, "Status": item.Status, "Created At": new Date(item.CreatedAt).toLocaleDateString(),
+                    ...awardedInfo
+                };
+            });
+
+            const worksheet = XLSX.utils.json_to_sheet(reportData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "MyRequisitions");
+            XLSX.writeFile(workbook, `My_Requisitions_Report.xlsx`);
+        }
+
+        async function downloadGenericReport(sheetName, fileName, filterFn = null, view = false) {
+            showToast(`Generating ${fileName} report...`, 'info');
+            let data = await getData(view ? 'AllRequirementsView' : sheetName, true) || [];
+            if (filterFn) {
+                data = data.filter(filterFn);
+            }
+            if (data.length === 0) {
+                showToast('No data available to download.', 'warning');
+                return;
+            }
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, sheetName.substring(0,30));
+            XLSX.writeFile(workbook, `${fileName}.xlsx`);
+        }
+
+        function downloadAllRequirementsReport() {
+            downloadGenericReport('AllRequirementsView', 'Active_Requirements_Report', item => item.Status === 'Active', true);
+        }
+        function downloadAwardedContractsReport() {
+            downloadGenericReport('AwardedContracts', 'Awarded_Contracts_Report');
+        }
+        function downloadPendingReqsReport() {
+             downloadGenericReport('AllRequirementsView', 'Pending_Requisitions_Report', item => item.Status === 'Pending Approval', true);
+        }
+        function downloadPendingUsersReport() {
+            downloadGenericReport('PendingUsers', 'Pending_Users_Report');
+        }
     </script>
 </body>
 </html>
