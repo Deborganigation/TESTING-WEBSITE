@@ -1041,28 +1041,39 @@
         // =================================================================
         function updateReportView() { const awardedData = APP_DATA.AwardedContracts || []; const allItems = APP_DATA.RequisitionItems || []; const allBids = APP_DATA.Bids || []; const allUsers = APP_DATA.Users || []; const startDate = document.getElementById('report-start-date').value; const endDate = document.getElementById('report-end-date').value; const filteredAwarded = awardedData.filter(c => { const awardDate = new Date(c.AwardedDate); return (!startDate || awardDate >= new Date(startDate)) && (!endDate || awardDate <= new Date(new Date(endDate).getTime() + 86400000)); }); const totalSpend = filteredAwarded.reduce((sum, item) => sum + parseFloat(item.AwardedAmount || 0), 0); document.getElementById('report-total-spend').textContent = formatCurrency(totalSpend); let costSavings = 0; filteredAwarded.forEach(award => { const bidsForItem = allBids.filter(b => b.ItemID === award.ItemID).sort((a,b) => a.BidAmount - b.BidAmount); if (bidsForItem.length > 1) { costSavings += (bidsForItem[1].BidAmount - bidsForItem[0].BidAmount); } }); document.getElementById('report-cost-savings').textContent = formatCurrency(costSavings); const itemsWithBids = allItems.filter(i => allBids.some(b => b.ItemID === i.ItemID)); const avgBids = itemsWithBids.length > 0 ? (allBids.length / itemsWithBids.length) : 0; document.getElementById('report-avg-bids').textContent = avgBids.toFixed(1); const awardedItemsWithDates = filteredAwarded.map(award => { const item = allItems.find(i => i.ItemID === award.ItemID); return item ? { createdAt: new Date(item.CreatedAt), awardedAt: new Date(award.AwardedDate) } : null; }).filter(Boolean); if (awardedItemsWithDates.length > 0) { const totalDays = awardedItemsWithDates.reduce((sum, d) => sum + (d.awardedAt - d.createdAt), 0); const avgDays = (totalDays / awardedItemsWithDates.length) / (1000 * 60 * 60 * 24); document.getElementById('report-cycle-time').textContent = `${avgDays.toFixed(0)} Days`; } else { document.getElementById('report-cycle-time').textContent = '0 Days'; } const spendByVendor = filteredAwarded.reduce((acc, item) => { acc[item.VendorName] = (acc[item.VendorName] || 0) + parseFloat(item.AwardedAmount || 0); return acc; }, {}); if(vendorSpendChart) vendorSpendChart.destroy(); vendorSpendChart = new Chart(document.getElementById('vendorSpendChart'), { type: 'bar', data: { labels: Object.keys(spendByVendor), datasets: [{ label: 'Total Spend (₹)', data: Object.values(spendByVendor), backgroundColor: '#0d6efd' }] }, options: { scales: { y: { beginAtZero: true } }, responsive: true, maintainAspectRatio: false } }); const statusCounts = allItems.reduce((acc, item) => { acc[item.Status] = (acc[item.Status] || 0) + 1; return acc; }, {}); if(itemStatusChart) itemStatusChart.destroy(); itemStatusChart = new Chart(document.getElementById('itemStatusChart'), { type: 'doughnut', data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#198754', '#ffc107', '#0d6efd', '#6c757d', '#dc3545', '#0dcaf0'], }] }, options: { responsive: true, maintainAspectRatio: true } }); const spendByProduct = filteredAwarded.reduce((acc, item) => { acc[item.ItemName] = (acc[item.ItemName] || 0) + parseFloat(item.AwardedAmount || 0); return acc; }, {}); if(productSpendChart) productSpendChart.destroy(); productSpendChart = new Chart(document.getElementById('productSpendChart'), { type: 'bar', data: { labels: Object.keys(spendByProduct), datasets: [{ label: 'Total Spend (₹)', data: Object.values(spendByProduct), backgroundColor: '#198754' }] }, options: { indexAxis: 'y', scales: { x: { beginAtZero: true } }, responsive: true, maintainAspectRatio: false } }); const vendorStats = allUsers.filter(u => u.Role === 'Vendor').map(vendor => { const bidsSubmitted = allBids.filter(b => b.VendorID === vendor.UserID).length; const contractsWon = filteredAwarded.filter(c => c.VendorID === vendor.UserID); const winRate = bidsSubmitted > 0 ? (contractsWon.length / bidsSubmitted) * 100 : 0; const totalValue = contractsWon.reduce((sum, c) => sum + parseFloat(c.AwardedAmount), 0); return { name: vendor.FullName, bidsSubmitted, contractsWon: contractsWon.length, winRate: winRate.toFixed(1), totalValue }; }).sort((a,b) => b.contractsWon - a.contractsWon); const tableBody = document.querySelector('#vendor-performance-table tbody'); tableBody.innerHTML = vendorStats.map(v => `<tr><td>${v.name}</td><td>${v.bidsSubmitted}</td><td>${v.contractsWon}</td><td>${v.winRate}%</td><td>${formatCurrency(v.totalValue)}</td></tr>`).join(''); }
         
-        function sendConsolidatedAwardEmails(winningBids) {
+        // ==================================================
+        // =========== UPDATED FUNCTION STARTS HERE =========
+        // ==================================================
+        async function sendConsolidatedAwardEmails(winningBids) {
             try {
-                const notifications = {};
+                const notificationsByVendor = {};
+
+                // Group all awarded items by vendor email
                 winningBids.forEach(bid => {
-                    if (bid.VendorEmail && bid.RequisitionID) {
-                        const key = `${bid.VendorEmail}_${bid.RequisitionID}`;
-                        if (!notifications[key]) {
-                            notifications[key] = {
-                                vendorName: bid.VendorName, vendorEmail: bid.VendorEmail,
-                                reqId: bid.RequisitionID, items: []
+                    if (bid.VendorEmail) {
+                        const vendorKey = bid.VendorEmail;
+                        if (!notificationsByVendor[vendorKey]) {
+                            notificationsByVendor[vendorKey] = {
+                                vendorName: bid.VendorName,
+                                vendorEmail: bid.VendorEmail,
+                                items: []
                             };
                         }
-                        notifications[key].items.push({ name: bid.ItemName, amount: formatCurrency(bid.BidAmount) });
+                        notificationsByVendor[vendorKey].items.push({
+                            name: bid.ItemName,
+                            amount: formatCurrency(bid.BidAmount),
+                            reqId: bid.RequisitionID.split('-')[1] // Keep Req ID for item context
+                        });
                     }
                 });
 
-                for (const key in notifications) {
-                    const notification = notifications[key];
-                    const subject = `Contract Award Notification for Requisition ID: ${notification.reqId.split('-')[1]}`;
+                for (const vendorKey in notificationsByVendor) {
+                    const notification = notificationsByVendor[vendorKey];
+                    const subject = `Contract Award Notification from DEB'S PROCUREMENT`;
                     
                     const itemsHtml = notification.items.map(item => `
                         <tr>
+                            <td style="padding: 10px; border: 1px solid #ddd;">${item.reqId}</td>
                             <td style="padding: 10px; border: 1px solid #ddd;">${item.name}</td>
                             <td style="padding: 10px; border: 1px solid #ddd; text-align: right;"><strong>${item.amount}</strong></td>
                         </tr>`).join('');
@@ -1072,10 +1083,11 @@
                             <div style="max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
                                 <h2 style="color: #0d6efd; text-align: center;">Contract Award Notification</h2>
                                 <p>Dear ${notification.vendorName},</p>
-                                <p>Congratulations! You have been awarded the following item(s) from <strong>Requisition ID ${notification.reqId.split('-')[1]}</strong>:</p>
+                                <p>Congratulations! You have been awarded the following item(s):</p>
                                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                                     <thead style="background-color: #f2f2f2;">
                                         <tr>
+                                            <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Req. ID</th>
                                             <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Item Name</th>
                                             <th style="padding: 10px; border: 1px solid #ddd; text-align: right;">Awarded Amount</th>
                                         </tr>
@@ -1087,7 +1099,7 @@
                             </div>
                         </div>`;
                     
-                    const plainBody = `Dear ${notification.vendorName},\n\nCongratulations! You have been awarded the following item(s) from Requisition ID ${notification.reqId.split('-')[1]}:\n\n${notification.items.map(i => `  • ${i.name}: ${i.amount}`).join('\n')}\n\nBest regards,\nDEB'S PROCUREMENT Team`;
+                    const plainBody = `Dear ${notification.vendorName},\n\nCongratulations! You have been awarded the following item(s):\n\n${notification.items.map(i => `  • Req ID: ${i.reqId}, Item: ${i.name}, Amount: ${i.amount}`).join('\n')}\n\nBest regards,\nDEB'S PROCUREMENT Team`;
 
                     postData({ 
                         action: 'sendEmail', 
@@ -1104,6 +1116,10 @@
                 showToast("Award was successful, but could not send notification emails.", "warning");
             }
         }
+        // ================================================
+        // =========== UPDATED FUNCTION ENDS HERE =========
+        // ================================================
+
         async function downloadBiddingHistoryReport() { const bids = await getData('Bids', true); const items = await getData('RequisitionItems'); const users = await getData('Users'); const dataToExport = bids.map(bid => { const item = items.find(i => i.ItemID === bid.ItemID) || {}; const vendor = users.find(u => u.UserID === bid.VendorID) || {}; return { 'Req ID': `${item.RequisitionID}-${item.ItemSLNo}`, 'Item Name': item.ItemName, 'Vendor Name': vendor.FullName, 'Ex-works Rate': bid.ExWorksRate, 'Freight Rate': bid.FreightRate, 'Total Bid Amount': bid.BidAmount, 'Status': bid.BidStatus, 'Submitted At': new Date(bid.SubmittedAt).toLocaleString() }; }); exportToExcel(dataToExport, 'Bidding_History.xlsx'); }
         async function downloadAwardedContractsReport() { const awarded = await getData('AwardedContracts', true); const dataToExport = awarded.map(c => ({ 'Req ID': `${c.RequisitionID.split('-')[1]}`, 'Item Name': c.ItemName, 'Item Code': c.ItemCode, 'Quantity': c.Quantity, 'Unit': c.Unit, 'Vendor Name': c.VendorName, 'Awarded Amount': c.AwardedAmount, 'Awarded Date': new Date(c.AwardedDate).toLocaleDateString(), 'Remarks': c.Remarks })); exportToExcel(dataToExport, 'Awarded_Contracts.xlsx'); }
         async function downloadVendorBidsHistory() { const currentUser = JSON.parse(sessionStorage.getItem('loggedInUser')); const bids = (await getData('Bids', true) || []).filter(b => b.VendorID === currentUser.UserID); const items = await getData('RequisitionItems'); const dataToExport = bids.map(bid => { const item = items.find(i => i.ItemID === bid.ItemID) || {}; return { 'Req ID': `${item.RequisitionID}-${item.ItemSLNo}`, 'Item Name': item.ItemName, 'My Bid Amount': bid.BidAmount, 'Status': bid.BidStatus, 'Submitted At': new Date(bid.SubmittedAt).toLocaleString() }; }); exportToExcel(dataToExport, `${currentUser.FullName}_Bids_History.xlsx`); }
