@@ -466,12 +466,10 @@
             if (PRODUCT_LIST.length > 0) return;
             showLoader();
             try {
-                // --- CACHE BUSTER ADDED HERE ---
                 const response = await fetch(`${PRODUCT_DATA_URL}?t=${new Date().getTime()}`);
                 if (!response.ok) throw new Error('Network response was not ok');
                 const result = await response.json();
                 
-                // Check if the script returned an error object
                 if (result && result.error) {
                     throw new Error(`Error from product script: ${result.error}`);
                 }
@@ -806,7 +804,6 @@
                 try {
                     const product = JSON.parse(selectedOptionValue);
                     codeInput.value = product.ITEM_CODE || '';
-                    // Robustly check for UM, um, or Unit property
                     unitInput.value = product.UM || product.um || product.Unit || '';
                 } catch (e) {
                     console.error("Could not parse product JSON from option value:", selectedOptionValue, e);
@@ -831,7 +828,7 @@
                                 break;
                             }
                         } catch (e) {
-                            continue; // Ignore options with invalid JSON
+                            continue;
                         }
                     }
                 }
@@ -956,11 +953,7 @@
 
             const payload = {
                 action: 'reopenBiddingWithVendors',
-                data: {
-                    ItemIDs: itemIds,
-                    Remarks: remarks,
-                    VendorIDs: selectedVendorIds
-                }
+                data: { ItemIDs: itemIds, Remarks: remarks, VendorIDs: selectedVendorIds }
             };
             
             const result = await postData(payload);
@@ -1042,16 +1035,16 @@
         function updateReportView() { const awardedData = APP_DATA.AwardedContracts || []; const allItems = APP_DATA.RequisitionItems || []; const allBids = APP_DATA.Bids || []; const allUsers = APP_DATA.Users || []; const startDate = document.getElementById('report-start-date').value; const endDate = document.getElementById('report-end-date').value; const filteredAwarded = awardedData.filter(c => { const awardDate = new Date(c.AwardedDate); return (!startDate || awardDate >= new Date(startDate)) && (!endDate || awardDate <= new Date(new Date(endDate).getTime() + 86400000)); }); const totalSpend = filteredAwarded.reduce((sum, item) => sum + parseFloat(item.AwardedAmount || 0), 0); document.getElementById('report-total-spend').textContent = formatCurrency(totalSpend); let costSavings = 0; filteredAwarded.forEach(award => { const bidsForItem = allBids.filter(b => b.ItemID === award.ItemID).sort((a,b) => a.BidAmount - b.BidAmount); if (bidsForItem.length > 1) { costSavings += (bidsForItem[1].BidAmount - bidsForItem[0].BidAmount); } }); document.getElementById('report-cost-savings').textContent = formatCurrency(costSavings); const itemsWithBids = allItems.filter(i => allBids.some(b => b.ItemID === i.ItemID)); const avgBids = itemsWithBids.length > 0 ? (allBids.length / itemsWithBids.length) : 0; document.getElementById('report-avg-bids').textContent = avgBids.toFixed(1); const awardedItemsWithDates = filteredAwarded.map(award => { const item = allItems.find(i => i.ItemID === award.ItemID); return item ? { createdAt: new Date(item.CreatedAt), awardedAt: new Date(award.AwardedDate) } : null; }).filter(Boolean); if (awardedItemsWithDates.length > 0) { const totalDays = awardedItemsWithDates.reduce((sum, d) => sum + (d.awardedAt - d.createdAt), 0); const avgDays = (totalDays / awardedItemsWithDates.length) / (1000 * 60 * 60 * 24); document.getElementById('report-cycle-time').textContent = `${avgDays.toFixed(0)} Days`; } else { document.getElementById('report-cycle-time').textContent = '0 Days'; } const spendByVendor = filteredAwarded.reduce((acc, item) => { acc[item.VendorName] = (acc[item.VendorName] || 0) + parseFloat(item.AwardedAmount || 0); return acc; }, {}); if(vendorSpendChart) vendorSpendChart.destroy(); vendorSpendChart = new Chart(document.getElementById('vendorSpendChart'), { type: 'bar', data: { labels: Object.keys(spendByVendor), datasets: [{ label: 'Total Spend (₹)', data: Object.values(spendByVendor), backgroundColor: '#0d6efd' }] }, options: { scales: { y: { beginAtZero: true } }, responsive: true, maintainAspectRatio: false } }); const statusCounts = allItems.reduce((acc, item) => { acc[item.Status] = (acc[item.Status] || 0) + 1; return acc; }, {}); if(itemStatusChart) itemStatusChart.destroy(); itemStatusChart = new Chart(document.getElementById('itemStatusChart'), { type: 'doughnut', data: { labels: Object.keys(statusCounts), datasets: [{ data: Object.values(statusCounts), backgroundColor: ['#198754', '#ffc107', '#0d6efd', '#6c757d', '#dc3545', '#0dcaf0'], }] }, options: { responsive: true, maintainAspectRatio: true } }); const spendByProduct = filteredAwarded.reduce((acc, item) => { acc[item.ItemName] = (acc[item.ItemName] || 0) + parseFloat(item.AwardedAmount || 0); return acc; }, {}); if(productSpendChart) productSpendChart.destroy(); productSpendChart = new Chart(document.getElementById('productSpendChart'), { type: 'bar', data: { labels: Object.keys(spendByProduct), datasets: [{ label: 'Total Spend (₹)', data: Object.values(spendByProduct), backgroundColor: '#198754' }] }, options: { indexAxis: 'y', scales: { x: { beginAtZero: true } }, responsive: true, maintainAspectRatio: false } }); const vendorStats = allUsers.filter(u => u.Role === 'Vendor').map(vendor => { const bidsSubmitted = allBids.filter(b => b.VendorID === vendor.UserID).length; const contractsWon = filteredAwarded.filter(c => c.VendorID === vendor.UserID); const winRate = bidsSubmitted > 0 ? (contractsWon.length / bidsSubmitted) * 100 : 0; const totalValue = contractsWon.reduce((sum, c) => sum + parseFloat(c.AwardedAmount), 0); return { name: vendor.FullName, bidsSubmitted, contractsWon: contractsWon.length, winRate: winRate.toFixed(1), totalValue }; }).sort((a,b) => b.contractsWon - a.contractsWon); const tableBody = document.querySelector('#vendor-performance-table tbody'); tableBody.innerHTML = vendorStats.map(v => `<tr><td>${v.name}</td><td>${v.bidsSubmitted}</td><td>${v.contractsWon}</td><td>${v.winRate}%</td><td>${formatCurrency(v.totalValue)}</td></tr>`).join(''); }
         
         // ==================================================
-        // =========== UPDATED FUNCTION STARTS HERE =========
+        // =========== CORRECTED FUNCTION STARTS HERE =========
         // ==================================================
         async function sendConsolidatedAwardEmails(winningBids) {
             try {
                 const notificationsByVendor = {};
 
-                // Group all awarded items by vendor email
+                // Group all awarded items by vendor email. This is the main fix.
                 winningBids.forEach(bid => {
                     if (bid.VendorEmail) {
-                        const vendorKey = bid.VendorEmail;
+                        const vendorKey = bid.VendorEmail; // Use only email as the key
                         if (!notificationsByVendor[vendorKey]) {
                             notificationsByVendor[vendorKey] = {
                                 vendorName: bid.VendorName,
@@ -1067,6 +1060,7 @@
                     }
                 });
 
+                // Now, loop through the consolidated list and send one email per vendor
                 for (const vendorKey in notificationsByVendor) {
                     const notification = notificationsByVendor[vendorKey];
                     const subject = `Contract Award Notification from DEB'S PROCUREMENT`;
@@ -1083,7 +1077,7 @@
                             <div style="max-width: 600px; margin: auto; border: 1px solid #ddd; border-radius: 8px; padding: 20px;">
                                 <h2 style="color: #0d6efd; text-align: center;">Contract Award Notification</h2>
                                 <p>Dear ${notification.vendorName},</p>
-                                <p>Congratulations! You have been awarded the following item(s):</p>
+                                <p>We are pleased to inform you that you have been awarded the following contract(s). Congratulations!</p>
                                 <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
                                     <thead style="background-color: #f2f2f2;">
                                         <tr>
@@ -1094,13 +1088,15 @@
                                     </thead>
                                     <tbody>${itemsHtml}</tbody>
                                 </table>
-                                <p>We look forward to working with you. Please proceed with the necessary formalities.</p>
+                                <p>We look forward to your prompt and successful execution of this contract. Please proceed with the necessary formalities.</p>
+                                <p>Thank you for your partnership.</p>
                                 <p>Best regards,<br><strong>DEB'S PROCUREMENT Team</strong></p>
                             </div>
                         </div>`;
                     
-                    const plainBody = `Dear ${notification.vendorName},\n\nCongratulations! You have been awarded the following item(s):\n\n${notification.items.map(i => `  • Req ID: ${i.reqId}, Item: ${i.name}, Amount: ${i.amount}`).join('\n')}\n\nBest regards,\nDEB'S PROCUREMENT Team`;
+                    const plainBody = `Dear ${notification.vendorName},\n\nWe are pleased to inform you that you have been awarded the following contract(s). Congratulations!\n\n${notification.items.map(i => `  • Req ID: ${i.reqId}, Item: ${i.name}, Amount: ${i.amount}`).join('\n')}\n\nWe look forward to your prompt and successful execution of this contract. Please proceed with the necessary formalities.\n\nThank you for your partnership.\n\nBest regards,\nDEB'S PROCUREMENT Team`;
 
+                    // This part sends the email. No 'cc' is included yet as per your request.
                     postData({ 
                         action: 'sendEmail', 
                         data: { 
@@ -1117,7 +1113,7 @@
             }
         }
         // ================================================
-        // =========== UPDATED FUNCTION ENDS HERE =========
+        // =========== CORRECTED FUNCTION ENDS HERE =========
         // ================================================
 
         async function downloadBiddingHistoryReport() { const bids = await getData('Bids', true); const items = await getData('RequisitionItems'); const users = await getData('Users'); const dataToExport = bids.map(bid => { const item = items.find(i => i.ItemID === bid.ItemID) || {}; const vendor = users.find(u => u.UserID === bid.VendorID) || {}; return { 'Req ID': `${item.RequisitionID}-${item.ItemSLNo}`, 'Item Name': item.ItemName, 'Vendor Name': vendor.FullName, 'Ex-works Rate': bid.ExWorksRate, 'Freight Rate': bid.FreightRate, 'Total Bid Amount': bid.BidAmount, 'Status': bid.BidStatus, 'Submitted At': new Date(bid.SubmittedAt).toLocaleString() }; }); exportToExcel(dataToExport, 'Bidding_History.xlsx'); }
